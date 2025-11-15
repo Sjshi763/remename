@@ -13,21 +13,21 @@
   </Design.DataContext>
 
   <StackPanel Spacing="10" Margin="20">
-    <TextBlock Text="文件夹路径：" FontWeight="Bold"/>
+    <TextBlock Text="文件夹路径：" FontWeight="Bold" FontFamily="$Default"/>
     <StackPanel Orientation="Horizontal">
-      <TextBox Text="{Binding SelectedPath}" Width="300"/>
-      <Button Content="浏览..." Margin="5,0"/>
+      <TextBox Text="{Binding SelectedPath}" Width="300" FontFamily="$Default"/>
+      <Button Content="浏览..." Margin="5,0" FontFamily="$Default"/>
     </StackPanel>
     
-    <TextBlock Text="搜索内容：" FontWeight="Bold"/>
-    <TextBox Text="{Binding SearchText}"/>
+    <TextBlock Text="搜索内容：" FontWeight="Bold" FontFamily="$Default"/>
+    <TextBox Text="{Binding SearchText}" FontFamily="$Default"/>
     
-    <TextBlock Text="替换为：" FontWeight="Bold"/>
-    <TextBox Text="{Binding ReplaceText}"/>
+    <TextBlock Text="替换为：" FontWeight="Bold" FontFamily="$Default"/>
+    <TextBox Text="{Binding ReplaceText}" FontFamily="$Default"/>
     
     <Button Content="重命名文件" Command="{Binding RenameCommand}" 
             Margin="0,10,0,0" 
             HorizontalAlignment="Left" 
-            Width="120"/>
+            Width="120" FontFamily="$Default"/>
   </StackPanel>
 </UserControl>
