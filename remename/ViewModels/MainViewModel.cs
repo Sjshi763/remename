@@ -18,7 +18,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _replaceText = string.Empty;
 
-    private RelayCommand _renameCommand;
+    private RelayCommand? _renameCommand;
     public IRelayCommand RenameCommand => _renameCommand ??= new RelayCommand(ExecuteRename);
 
     private void ExecuteRename()
