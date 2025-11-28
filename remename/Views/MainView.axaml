@@ -12,22 +12,36 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <StackPanel Spacing="10" Margin="20">
-    <TextBlock Text="文件夹路径：" FontWeight="Bold"/>
-    <StackPanel Orientation="Horizontal">
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    
+    <TextBlock Grid.Row="0" Text="文件夹路径：" FontWeight="Bold" Margin="0,0,0,5"/>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="0,0,0,10">
       <TextBox Text="{Binding SelectedPath}" Width="300"/>
-      <Button Content="浏览..." Margin="5,0"/>
+      <Button Content="浏览..." Command="{Binding SelectFolderCommand}"/>
     </StackPanel>
     
-    <TextBlock Text="搜索内容：" FontWeight="Bold"/>
-    <TextBox Text="{Binding SearchText}"/>
+    <TextBlock Grid.Row="2" Text="搜索内容：" FontWeight="Bold" Margin="0,0,0,5"/>
+    <TextBox Grid.Row="3" Text="{Binding SearchText}" Margin="0,0,0,10"/>
     
-    <TextBlock Text="替换为：" FontWeight="Bold"/>
-    <TextBox Text="{Binding ReplaceText}"/>
+    <TextBlock Grid.Row="4" Text="待处理文件列表：" FontWeight="Bold" Margin="0,0,0,5"/>
+    <ListBox Grid.Row="5" ItemsSource="{Binding FileList}" Height="200" Margin="0,0,0,10"/>
     
-    <Button Content="重命名文件" Command="{Binding RenameCommand}" 
-            Margin="0,10,0,0" 
+    <TextBlock Grid.Row="6" Text="替换为：" FontWeight="Bold" Margin="0,0,0,5"/>
+    <TextBox Grid.Row="7" Text="{Binding ReplaceText}" Margin="0,0,0,10"/>
+    
+    <Button Grid.Row="8" Content="重命名文件" Command="{Binding RenameCommand}" 
             HorizontalAlignment="Left" 
             Width="120"/>
-  </StackPanel>
+  </Grid>
 </UserControl>
