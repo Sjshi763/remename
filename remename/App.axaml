@@ -11,5 +11,17 @@
 
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="$Default" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="$Default" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="FontFamily" Value="$Default" />
+        </Style>
+        <Style Selector="Label">
+            <Setter Property="FontFamily" Value="$Default" />
+        </Style>
     </Application.Styles>
 </Application>
