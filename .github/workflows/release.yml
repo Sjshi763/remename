@@ -1,0 +1,241 @@
+name: Build and Release
+
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_NAME: remename
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build Windows x64
+      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-x64
+    
+    - name: Create Windows installer
+      run: |
+        Compress-Archive -Path ./publish/win-x64/* -DestinationPath ./${{ env.PROJECT_NAME }}-win-x64.zip
+    
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-x64
+        path: ./${{ env.PROJECT_NAME }}-win-x64.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Install dependencies for AppImage
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libfuse2
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build Linux x64
+      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish/linux-x64
+    
+    - name: Create tar.gz archive
+      run: tar -czf ${{ env.PROJECT_NAME }}-linux-x64.tar.gz -C ./publish/linux-x64 .
+    
+    - name: Create DEB package
+      run: |
+        mkdir -p debian/DEBIAN
+        mkdir -p debian/usr/bin
+        mkdir -p debian/usr/share/applications
+        mkdir -p debian/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy binary
+        cp ./publish/linux-x64/${{ env.PROJECT_NAME }}.Desktop debian/usr/bin/${{ env.PROJECT_NAME }}
+        chmod +x debian/usr/bin/${{ env.PROJECT_NAME }}
+        
+        # Create control file
+        cat > debian/DEBIAN/control << EOF
+        Package: ${{ env.PROJECT_NAME }}
+        Version: ${{ github.event.release.tag_name || '1.0.0' }}
+        Section: utils
+        Priority: optional
+        Architecture: amd64
+        Maintainer: Your Name <your.email@example.com>
+        Description: ${{ env.PROJECT_NAME }} Application
+         A cross-platform Avalonia application for renaming files.
+        EOF
+        
+        # Create desktop entry
+        cat > debian/usr/share/applications/${{ env.PROJECT_NAME }}.desktop << EOF
+        [Desktop Entry]
+        Name=${{ env.PROJECT_NAME }}
+        Exec=${{ env.PROJECT_NAME }}
+        Icon=${{ env.PROJECT_NAME }}
+        Type=Application
+        Categories=Utility;
+        Terminal=false
+        EOF
+        
+        # Copy icon if exists
+        if [ -f "${{ env.PROJECT_NAME }}/Assets/avalonia-logo.ico" ]; then
+          cp ${{ env.PROJECT_NAME }}/Assets/avalonia-logo.ico debian/usr/share/icons/hicolor/256x256/apps/${{ env.PROJECT_NAME }}.ico
+        fi
+        
+        # Build DEB package
+        dpkg-deb --build debian
+        mv debian.deb ${{ env.PROJECT_NAME }}_${{ github.event.release.tag_name || '1.0.0' }}_amd64.deb
+    
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-x64
+        path: |
+          ./${{ env.PROJECT_NAME }}-linux-x64.tar.gz
+          ./${{ env.PROJECT_NAME }}_*.deb
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build macOS x64
+      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -o ./publish/osx-x64
+    
+    - name: Build macOS arm64 (Apple Silicon)
+      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o ./publish/osx-arm64
+    
+    - name: Create macOS packages
+      run: |
+        tar -czf ${{ env.PROJECT_NAME }}-osx-x64.tar.gz -C ./publish/osx-x64 .
+        tar -czf ${{ env.PROJECT_NAME }}-osx-arm64.tar.gz -C ./publish/osx-arm64 .
+    
+    - name: Upload macOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos
+        path: |
+          ./${{ env.PROJECT_NAME }}-osx-x64.tar.gz
+          ./${{ env.PROJECT_NAME }}-osx-arm64.tar.gz
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+    
+    - name: Install Android workload
+      run: dotnet workload install android
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build Android APK
+      run: |
+        dotnet publish ${{ env.PROJECT_NAME }}.Android/${{ env.PROJECT_NAME }}.Android.csproj -c Release -f net8.0-android -o ./publish/android
+    
+    - name: Sign APK
+      if: ${{ github.event_name == 'release' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      run: |
+        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
+        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore keystore.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ./publish/android/*.apk "${{ secrets.ANDROID_KEY_ALIAS }}"
+        rm keystore.jks
+    
+    - name: Upload Android artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: android
+        path: ./publish/android/*.apk
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Install iOS workload
+      run: dotnet workload install ios
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build iOS
+      run: |
+        dotnet publish ${{ env.PROJECT_NAME }}.iOS/${{ env.PROJECT_NAME }}.iOS.csproj -c Release -f net8.0-ios -o ./publish/ios
+    
+    - name: Create IPA (unsigned)
+      run: |
+        cd ./publish/ios
+        mkdir Payload
+        cp -r *.app Payload/
+        zip -r ../${{ env.PROJECT_NAME }}-ios-unsigned.ipa Payload
+        cd ../..
+    
+    - name: Upload iOS artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios
+        path: ./publish/${{ env.PROJECT_NAME }}-ios-unsigned.ipa
+
+  release:
+    needs: [build-windows, build-linux, build-macos, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+    
+    - name: Display structure
+      run: ls -R ./artifacts
+    
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./artifacts/windows-x64/*.zip
+          ./artifacts/linux-x64/*.tar.gz
+          ./artifacts/linux-x64/*.deb
+          ./artifacts/macos/*.tar.gz
+          ./artifacts/android/*.apk
+          ./artifacts/ios/*.ipa
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
