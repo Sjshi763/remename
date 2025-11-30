@@ -167,11 +167,17 @@ jobs:
         dotnet publish ${{ env.PROJECT_NAME }}.Android/${{ env.PROJECT_NAME }}.Android.csproj -c Release -f net8.0-android -o ./publish/android
     
     - name: Sign APK
-      if: ${{ github.event_name == 'release' && secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      if: github.event_name == 'release'
+      env:
+        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
       run: |
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > keystore.jks
-        jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore keystore.jks -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" ./publish/android/*.apk "${{ secrets.ANDROID_KEY_ALIAS }}"
-        rm keystore.jks
+        if [ ! -z "$ANDROID_KEYSTORE_BASE64" ]; then
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" ./publish/android/*.apk "$ANDROID_KEY_ALIAS"
+          rm keystore.jks
+        fi
     
     - name: Upload Android artifact
       uses: actions/upload-artifact@v4
