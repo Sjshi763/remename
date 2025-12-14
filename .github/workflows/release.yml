@@ -1,247 +1,169 @@
-name: Build and Release
+name: Build Release for ATC4-HQ
 
 on:
   release:
-    types: [created, published]
-  workflow_dispatch:
-
-env:
-  DOTNET_VERSION: '8.0.x'
-  PROJECT_NAME: remename
+    types: [ created ] # 当创建新的 GitHub Release 时触发
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  build:
+    runs-on: windows-latest # 在最新的 Windows 环境下运行
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
+    - name: Checkout code # 步骤1: 检出仓库代码
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK # 步骤2: 安装 .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build Windows x64
-      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-x64
-    
-    - name: Create Windows installer
-      run: |
-        Compress-Archive -Path ./publish/win-x64/* -DestinationPath ./${{ env.PROJECT_NAME }}-win-x64.zip
-    
-    - name: Upload Windows artifact
+        dotnet-version: '9.x.x' # 指定 .NET 9 LTS 版本，您可以根据您的项目实际使用的版本修改
+
+    - name: Restore dependencies # 步骤3: 恢复 NuGet 包依赖
+      run: dotnet restore ./ATC4-HQ.csproj # 修复路径：假设 ATC4-HQ 文件夹在仓库根目录
+
+    - name: Build project # 步骤4: 构建项目 (Release 配置)
+      run: dotnet build ./ATC4-HQ.csproj --configuration Release --no-restore # 修复路径
+
+    - name: Publish application # 步骤5: 发布应用程序 (生成可执行文件)
+      run: dotnet publish ./ATC4-HQ.csproj --configuration Release --no-build -o publish # 修复路径
+
+    - name: Upload build artifact # 步骤6: 上传构建产物 (publish目录)
       uses: actions/upload-artifact@v4
       with:
-        name: windows-x64
-        path: ./${{ env.PROJECT_NAME }}-win-x64.zip
+        name: ATC4-HQ-Publish # 产物的名称
+        path: publish # 上传publish目录
 
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Install dependencies for AppImage
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libfuse2
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build Linux x64
-      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -o ./publish/linux-x64
-    
-    - name: Create tar.gz archive
-      run: tar -czf ${{ env.PROJECT_NAME }}-linux-x64.tar.gz -C ./publish/linux-x64 .
-    
-    - name: Create DEB package
-      run: |
-        mkdir -p debian/DEBIAN
-        mkdir -p debian/usr/bin
-        mkdir -p debian/usr/share/applications
-        mkdir -p debian/usr/share/icons/hicolor/256x256/apps
-        
-        # Copy binary
-        cp ./publish/linux-x64/${{ env.PROJECT_NAME }}.Desktop debian/usr/bin/${{ env.PROJECT_NAME }}
-        chmod +x debian/usr/bin/${{ env.PROJECT_NAME }}
-        
-        # Create control file
-        cat > debian/DEBIAN/control << EOF
-        Package: ${{ env.PROJECT_NAME }}
-        Version: ${{ github.event.release.tag_name || '1.0.0' }}
-        Section: utils
-        Priority: optional
-        Architecture: amd64
-        Maintainer: Your Name <your.email@example.com>
-        Description: ${{ env.PROJECT_NAME }} Application
-         A cross-platform Avalonia application for renaming files.
-        EOF
-        
-        # Create desktop entry
-        cat > debian/usr/share/applications/${{ env.PROJECT_NAME }}.desktop << EOF
-        [Desktop Entry]
-        Name=${{ env.PROJECT_NAME }}
-        Exec=${{ env.PROJECT_NAME }}
-        Icon=${{ env.PROJECT_NAME }}
-        Type=Application
-        Categories=Utility;
-        Terminal=false
-        EOF
-        
-        # Copy icon if exists
-        if [ -f "${{ env.PROJECT_NAME }}/Assets/avalonia-logo.ico" ]; then
-          cp ${{ env.PROJECT_NAME }}/Assets/avalonia-logo.ico debian/usr/share/icons/hicolor/256x256/apps/${{ env.PROJECT_NAME }}.ico
-        fi
-        
-        # Build DEB package
-        dpkg-deb --build debian
-        mv debian.deb ${{ env.PROJECT_NAME }}_${{ github.event.release.tag_name || '1.0.0' }}_amd64.deb
-    
-    - name: Upload Linux artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-x64
-        path: |
-          ./${{ env.PROJECT_NAME }}-linux-x64.tar.gz
-          ./${{ env.PROJECT_NAME }}_*.deb
+  build-msi: # 用于构建msi
+    needs: build # 此作业依赖于 'build' 作业
+    runs-on: windows-latest # 在最新的 Windows 环境下运行
 
-  build-macos:
-    runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build macOS x64
-      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -o ./publish/osx-x64
-    
-    - name: Build macOS arm64 (Apple Silicon)
-      run: dotnet publish ${{ env.PROJECT_NAME }}.Desktop/${{ env.PROJECT_NAME }}.Desktop.csproj -c Release -r osx-arm64 --self-contained -p:PublishSingleFile=true -o ./publish/osx-arm64
-    
-    - name: Create macOS packages
-      run: |
-        tar -czf ${{ env.PROJECT_NAME }}-osx-x64.tar.gz -C ./publish/osx-x64 .
-        tar -czf ${{ env.PROJECT_NAME }}-osx-arm64.tar.gz -C ./publish/osx-arm64 .
-    
-    - name: Upload macOS artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: macos
-        path: |
-          ./${{ env.PROJECT_NAME }}-osx-x64.tar.gz
-          ./${{ env.PROJECT_NAME }}-osx-arm64.tar.gz
+    - name: Checkout code # 步骤1: 检出仓库代码
+      uses: actions/checkout@v4
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-    
-    - name: Install Android workload
-      run: dotnet workload install android
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build Android APK
-      run: |
-        dotnet publish ${{ env.PROJECT_NAME }}.Android/${{ env.PROJECT_NAME }}.Android.csproj -c Release -f net8.0-android -o ./publish/android
-    
-    - name: Sign APK
-      if: github.event_name == 'release'
-      env:
-        ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      run: |
-        if [ ! -z "$ANDROID_KEYSTORE_BASE64" ]; then
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > keystore.jks
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 -keystore keystore.jks -storepass "$ANDROID_KEYSTORE_PASSWORD" ./publish/android/*.apk "$ANDROID_KEY_ALIAS"
-          rm keystore.jks
-        fi
-    
-    - name: Upload Android artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android
-        path: ./publish/android/*.apk
-
-  build-ios:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
-    
-    - name: Install iOS workload
-      run: dotnet workload install ios
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build iOS
-      run: |
-        dotnet publish ${{ env.PROJECT_NAME }}.iOS/${{ env.PROJECT_NAME }}.iOS.csproj -c Release -f net8.0-ios -o ./publish/ios
-    
-    - name: Create IPA (unsigned)
-      run: |
-        cd ./publish/ios
-        mkdir Payload
-        cp -r *.app Payload/
-        zip -r ../${{ env.PROJECT_NAME }}-ios-unsigned.ipa Payload
-        cd ../..
-    
-    - name: Upload iOS artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ios
-        path: ./publish/${{ env.PROJECT_NAME }}-ios-unsigned.ipa
-
-  release:
-    needs: [build-windows, build-linux, build-macos, build-android, build-ios]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release'
-    
-    steps:
-    - name: Download all artifacts
+    - name: Download build artifact # 步骤2: 下载 'build' 作业中上传的publish目录
       uses: actions/download-artifact@v4
       with:
-        path: ./artifacts
-    
-    - name: Display structure
-      run: ls -R ./artifacts
-    
-    - name: Upload to Release
+        name: ATC4-HQ-Publish # 指定要下载的产物名称
+        path: publish # 将publish目录下载到当前工作目录
+
+    - name: Install WiX Toolset
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe" -OutFile "wix311.exe"
+        Start-Process -FilePath "wix311.exe" -ArgumentList "/quiet", "/norestart" -Wait
+        echo "C:\Program Files (x86)\WiX Toolset v3.14\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Extract version from tag
+      if: github.event_name == 'release'
+      run: |
+        $tagVersion = "${{ github.event.release.tag_name }}"
+        # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
+        $version = $tagVersion -replace '^v', ''
+        # Ensure version has 4 parts for WiX (e.g., 1.0.0 -> 1.0.0.0)
+        $versionParts = $version.Split('.')
+        if ($versionParts.Length -lt 4) {
+          while ($versionParts.Length -lt 4) {
+            $versionParts += "0"
+          }
+          $wixVersion = $versionParts -join '.'
+        } else {
+          $wixVersion = $versionParts[0..3] -join '.'
+        }
+        echo "VERSION=$wixVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "Extracted version: $wixVersion from tag: $tagVersion"
+
+    - name: Create WiX source file
+      run: |
+        $version = if ($env:VERSION) { $env:VERSION } else { "1.0.0.0" }
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+          <Product Id="*" Name="ATC4-HQ" Language="1033" Version="$version" Manufacturer="ATC4-HQ" UpgradeCode="12345678-1234-1234-1234-123456789012">
+            <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+            
+            <MajorUpgrade DowngradeErrorMessage="A newer version of ATC4-HQ is already installed." />
+            <MediaTemplate EmbedCab="yes" />
+            
+            <Feature Id="ProductFeature" Title="ATC4-HQ" Level="1">
+              <ComponentGroupRef Id="ProductComponents" />
+              <ComponentRef Id="ApplicationShortcut" />
+            </Feature>
+          </Product>
+          
+          <Fragment>
+            <Directory Id="TARGETDIR" Name="SourceDir">
+              <Directory Id="ProgramFilesFolder">
+                <Directory Id="INSTALLFOLDER" Name="ATC4-HQ" />
+              </Directory>
+              <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="ATC4-HQ"/>
+              </Directory>
+              <Directory Id="DesktopFolder" />
+            </Directory>
+          </Fragment>
+          
+          <Fragment>
+            <DirectoryRef Id="ApplicationProgramsFolder">
+              <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                          Name="ATC4-HQ"
+                          Description="Launch ATC4-HQ"
+                          Target="[INSTALLFOLDER]ATC4-HQ.exe"
+                          WorkingDirectory="INSTALLFOLDER"/>
+                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\Microsoft\ATC4-HQ" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+              </Component>
+            </DirectoryRef>
+          </Fragment>
+        </Wix>
+        "@ | Out-File -FilePath "ATC4-HQ.wxs" -Encoding UTF8
+
+    - name: Generate components for all files
+      run: |
+        heat dir publish -dr INSTALLFOLDER -cg ProductComponents -gg -var var.PublishDir -sfrag -srd -out components.wxs
+
+    - name: Combine WiX files
+      run: |
+        $mainXml = [xml](Get-Content ATC4-HQ.wxs)
+        $componentsXml = [xml](Get-Content components.wxs)
+        
+        # 将components.xml中的Fragment元素添加到main.xml中
+        foreach ($fragment in $componentsXml.Wix.Fragment) {
+          $importedNode = $mainXml.ImportNode($fragment, $true)
+          $mainXml.Wix.AppendChild($importedNode) | Out-Null
+        }
+        
+        $mainXml.Save("combined.wxs")
+
+    - name: Build MSI
+      run: |
+        candle combined.wxs -dPublishDir=publish -out combined.wixobj
+        light combined.wixobj -out ATC4-HQ.msi
+
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATC4-HQ-MSI
+        path: ATC4-HQ.msi
+
+    - name: Download MSI artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ATC4-HQ-MSI
+        path: msi
+
+  Release:
+    needs: build-msi
+    runs-on: windows-latest
+
+    steps:
+    - name: Download MSI artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: ATC4-HQ-MSI
+        path: msi
+        
+    - name: Upload MSI to Release
+      if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          ./artifacts/windows-x64/*.zip
-          ./artifacts/linux-x64/*.tar.gz
-          ./artifacts/linux-x64/*.deb
-          ./artifacts/macos/*.tar.gz
-          ./artifacts/android/*.apk
-          ./artifacts/ios/*.ipa
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        files: ./msi/ATC4-HQ.msi
