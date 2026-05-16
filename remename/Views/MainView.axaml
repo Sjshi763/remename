@@ -43,7 +43,7 @@
     <!-- SMB Server Connection -->
     <TextBlock Grid.Row="2" Text="SMB服务器地址:" FontWeight="Bold" Margin="0,0,0,5"
                IsVisible="{Binding IsSmbMode}"/>
-    <TextBox Grid.Row="3" Text="{Binding SmbServer}" Watermark="例如: 192.168.1.100" Margin="0,0,0,5"
+    <TextBox Grid.Row="3" Text="{Binding SmbServer}" Watermark="例如: 192.168.1.100 或 192.168.1.100/share" Margin="0,0,0,5"
              IsVisible="{Binding IsSmbMode}"/>
 
     <TextBlock Grid.Row="4" Text="用户名:" FontWeight="Bold" Margin="0,0,0,5"

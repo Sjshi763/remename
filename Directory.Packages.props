@@ -20,6 +20,6 @@
         <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
         
         <!-- SMB Support -->
-        <PackageVersion Include="SharpCifs.Std" Version="2.4.7" />
+        <PackageVersion Include="SMBLibrary" Version="1.5.7" />
     </ItemGroup>
 </Project>
