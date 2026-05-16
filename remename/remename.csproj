@@ -20,6 +20,6 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="SharpCifs.Std" />
+    <PackageReference Include="SMBLibrary" />
   </ItemGroup>
 </Project>
