@@ -12,7 +12,6 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
         
-        // 订阅按钮点击事件来处理文件夹选择
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.SelectFolderCommand = new AsyncRelayCommand(SelectFolderAsync);
