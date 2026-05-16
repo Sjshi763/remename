@@ -18,5 +18,8 @@
         <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 
         <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
+        
+        <!-- SMB Support -->
+        <PackageVersion Include="SharpCifs.Std" Version="2.4.7" />
     </ItemGroup>
 </Project>

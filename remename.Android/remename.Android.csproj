@@ -20,9 +20,16 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" />
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+    <PackageReference Include="SharpCifs.Std" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\remename\remename.csproj" />
+  </ItemGroup>
+
+  <!-- Android permissions for SMB support -->
+  <ItemGroup>
+    <AndroidPermission Include="android.permission.INTERNET" />
+    <AndroidPermission Include="android.permission.ACCESS_NETWORK_STATE" />
   </ItemGroup>
 </Project>
