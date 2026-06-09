@@ -50,8 +50,8 @@ public partial class MainViewModel : ViewModelBase
         set => _selectFolderCommand = value;
     }
 
-    private RelayCommand? _renameCommand;
-    public IRelayCommand RenameCommand => _renameCommand ??= new RelayCommand(ExecuteRename);
+    private AsyncRelayCommand? _renameCommand;
+    public IAsyncRelayCommand RenameCommand => _renameCommand ??= new AsyncRelayCommand(ExecuteRenameAsync);
 
     private AsyncRelayCommand? _connectSmbCommand;
     public IAsyncRelayCommand ConnectSmbCommand =>
@@ -139,23 +139,36 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
-    private void ExecuteRename()
+    private async Task ExecuteRenameAsync()
     {
         if (string.IsNullOrEmpty(SelectedPath) || string.IsNullOrEmpty(SearchText))
             return;
 
-        if (IsSmbMode)
+        try
         {
-            ExecuteRenameSmbAsync().ConfigureAwait(false);
+            if (IsSmbMode)
+            {
+                await ExecuteRenameSmbAsync();
+            }
+            else
+            {
+                await Task.Run(ExecuteRenameLocal);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            ExecuteRenameLocal();
+            StatusMessage = $"重命名失败: {ex.Message}";
         }
     }
 
     private void ExecuteRenameLocal()
     {
+        if (SelectedPath.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            StatusMessage = "Android 文档目录不能直接用本地路径重命名，请使用SMB模式";
+            return;
+        }
+
         var files = Directory.GetFiles(SelectedPath);
         int renamedCount = 0;
         foreach (var file in files)
@@ -206,14 +219,28 @@ public partial class MainViewModel : ViewModelBase
 
     public void LoadFilesFromPath(string path)
     {
-        if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+        if (string.IsNullOrWhiteSpace(path))
             return;
+
+        if (path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            SelectedPath = path;
+            FileList.Clear();
+            StatusMessage = "Android 文档目录不是本地路径，请使用SMB模式或输入可访问的本地路径";
+            return;
+        }
 
         SelectedPath = path;
         FileList.Clear();
 
         try
         {
+            if (!Directory.Exists(path))
+            {
+                StatusMessage = "文件夹不存在或当前平台无权访问";
+                return;
+            }
+
             var files = Directory.GetFiles(path);
             foreach (var file in files)
             {

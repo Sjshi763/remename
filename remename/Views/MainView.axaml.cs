@@ -20,21 +20,35 @@ public partial class MainView : UserControl
 
     private async System.Threading.Tasks.Task SelectFolderAsync()
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
-
-        var folderPicker = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        try
         {
-            Title = "选择文件夹",
-            AllowMultiple = false
-        });
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel == null) return;
 
-        if (folderPicker.Count > 0)
-        {
-            var selectedFolder = folderPicker[0].Path.LocalPath;
+            var folderPicker = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "选择文件夹",
+                AllowMultiple = false
+            });
+
+            if (folderPicker.Count == 0)
+                return;
+
+            var selectedFolder = folderPicker[0];
+            var selectedPath = selectedFolder.Path.IsFile
+                ? selectedFolder.Path.LocalPath
+                : selectedFolder.Path.ToString();
+
             if (DataContext is MainViewModel viewModel)
             {
-                viewModel.LoadFilesFromPath(selectedFolder);
+                viewModel.LoadFilesFromPath(selectedPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.StatusMessage = $"选择文件夹失败: {ex.Message}";
             }
         }
     }
