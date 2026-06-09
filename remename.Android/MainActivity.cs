@@ -1,7 +1,9 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content.PM;
+using Android.Runtime;
 using Avalonia;
 using Avalonia.Android;
+using System;
 
 namespace remename.Android;
 
@@ -11,8 +13,18 @@ namespace remename.Android;
     Icon = "@drawable/icon",
     MainLauncher = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<App>
+public class MainActivity : AvaloniaMainActivity
 {
+}
+
+[Application]
+public class AndroidApp : AvaloniaAndroidApplication<App>
+{
+    public AndroidApp(IntPtr javaReference, JniHandleOwnership transfer)
+        : base(javaReference, transfer)
+    {
+    }
+
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         return base.CustomizeAppBuilder(builder)
