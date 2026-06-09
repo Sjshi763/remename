@@ -3,15 +3,15 @@ using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using System.Collections.ObjectModel;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls;
-using Avalonia.Platform.Storage;
 
 namespace remename.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
     private ISmbService? _smbService;
+    private AsyncRelayCommand? _selectFolderCommand;
 
     [ObservableProperty]
     private string _selectedPath = string.Empty;
@@ -43,12 +43,10 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
-    private IRelayCommand? _selectFolderCommand;
-    public IRelayCommand SelectFolderCommand 
-    { 
-        get => _selectFolderCommand ??= new RelayCommand(ExecuteSelectFolder);
-        set => _selectFolderCommand = value;
-    }
+    public IFolderPickerService? FolderPickerService { get; set; }
+
+    public IAsyncRelayCommand SelectFolderCommand =>
+        _selectFolderCommand ??= new AsyncRelayCommand(ExecuteSelectFolderAsync);
 
     private AsyncRelayCommand? _renameCommand;
     public IAsyncRelayCommand RenameCommand => _renameCommand ??= new AsyncRelayCommand(ExecuteRenameAsync);
@@ -66,10 +64,26 @@ public partial class MainViewModel : ViewModelBase
         _smbService = new SmbService();
     }
 
-    private void ExecuteSelectFolder()
+    private async Task ExecuteSelectFolderAsync()
     {
-        // 这个方法需要在View中调用，因为需要访问TopLevel
-        // 我们会在MainView.axaml.cs中实现具体的文件夹选择逻辑
+        if (FolderPickerService == null)
+        {
+            StatusMessage = "当前平台不支持选择文件夹";
+            return;
+        }
+
+        try
+        {
+            var selectedPath = await FolderPickerService.PickFolderAsync();
+            if (!string.IsNullOrWhiteSpace(selectedPath))
+            {
+                LoadFilesFromPath(selectedPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"选择文件夹失败: {ex.Message}";
+        }
     }
 
     private async Task ExecuteConnectSmbAsync()
@@ -84,10 +98,9 @@ public partial class MainViewModel : ViewModelBase
             IsSmbConnected = true;
             IsSmbMode = true;
             StatusMessage = "已连接到SMB服务器";
-            
-            // 连接成功后，设置路径为服务器根目录
-            SelectedPath = $"smb://{SmbServer}/";
-            await LoadSmbFilesAsync(SelectedPath);
+
+            var initialPath = BuildInitialSmbPath();
+            await LoadSmbFilesAsync(initialPath);
         }
         catch (Exception ex)
         {
@@ -159,6 +172,76 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"重命名失败: {ex.Message}";
         }
+    }
+
+    private string BuildInitialSmbPath()
+    {
+        var selectedPath = SelectedPath.Trim();
+        if (LooksLikeSmbPath(selectedPath))
+        {
+            return NormalizeSmbPath(selectedPath);
+        }
+
+        return NormalizeSmbPath(SmbServer);
+    }
+
+    private bool LooksLikeSmbPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) ||
+            path.StartsWith("content://", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (path.StartsWith("smb://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(@"\\", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (path.Contains(':'))
+        {
+            return false;
+        }
+
+        return path.Contains('/') || path.Contains('\\');
+    }
+
+    private string NormalizeSmbPath(string path)
+    {
+        var normalized = path.Trim().Replace('\\', '/').Trim('/');
+        var hadScheme = normalized.StartsWith("smb://", StringComparison.OrdinalIgnoreCase);
+        if (hadScheme)
+        {
+            normalized = normalized[6..].Trim('/');
+        }
+
+        if (string.IsNullOrEmpty(normalized))
+        {
+            normalized = SmbServer.Trim().Replace('\\', '/').Trim('/');
+        }
+
+        var serverName = ExtractSmbServerName(SmbServer);
+        var firstSegment = normalized.Split('/', 2, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+        if (!hadScheme &&
+            !string.IsNullOrEmpty(serverName) &&
+            !string.Equals(firstSegment, serverName, StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = $"{serverName}/{normalized}";
+        }
+
+        return $"smb://{normalized.TrimEnd('/')}/";
+    }
+
+    private static string ExtractSmbServerName(string server)
+    {
+        var normalized = server.Trim().Replace('\\', '/').Trim('/');
+        if (normalized.StartsWith("smb://", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized[6..].Trim('/');
+        }
+
+        return normalized.Split('/', 2, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? string.Empty;
     }
 
     private void ExecuteRenameLocal()
