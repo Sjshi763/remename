@@ -84,17 +84,17 @@
           <StackPanel Spacing="8" IsVisible="{Binding IsSmbMode}">
             <StackPanel>
               <TextBlock Classes="field-label" Text="服务器地址" />
-              <TextBox Text="{Binding SmbServer}" Watermark="192.168.1.100 或 192.168.1.100/share" />
+              <TextBox Text="{Binding SmbServer}" PlaceholderText="192.168.1.100 或 192.168.1.100/share" />
             </StackPanel>
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
               <StackPanel>
                 <TextBlock Classes="field-label" Text="用户名" />
-                <TextBox Text="{Binding SmbUsername}" Watermark="用户名" />
+                <TextBox Text="{Binding SmbUsername}" PlaceholderText="用户名" />
               </StackPanel>
               <StackPanel Grid.Column="1">
                 <TextBlock Classes="field-label" Text="密码" />
-                <TextBox Text="{Binding SmbPassword}" PasswordChar="*" Watermark="密码" />
+                <TextBox Text="{Binding SmbPassword}" PasswordChar="*" PlaceholderText="密码" />
               </StackPanel>
             </Grid>
 
@@ -111,7 +111,7 @@
         <StackPanel Spacing="10">
           <TextBlock Classes="section-title" Text="目标路径" />
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <TextBox Text="{Binding SelectedPath}" Watermark="选择本地文件夹，或输入 smb://server/share/path" />
+            <TextBox Text="{Binding SelectedPath}" PlaceholderText="选择本地文件夹，或输入 smb://server/share/path" />
             <Button Grid.Column="1"
                     Content="浏览"
                     Command="{Binding SelectFolderCommand}"
@@ -133,11 +133,11 @@
           <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
             <StackPanel>
               <TextBlock Classes="field-label" Text="搜索" />
-              <TextBox Text="{Binding SearchText}" Watermark="要替换的内容" />
+              <TextBox Text="{Binding SearchText}" PlaceholderText="要替换的内容" />
             </StackPanel>
             <StackPanel Grid.Column="1">
               <TextBlock Classes="field-label" Text="替换为" />
-              <TextBox Text="{Binding ReplaceText}" Watermark="新的内容" />
+              <TextBox Text="{Binding ReplaceText}" PlaceholderText="新的内容" />
             </StackPanel>
           </Grid>
           <Button Content="重命名" Command="{Binding RenameCommand}" Classes="primary"
