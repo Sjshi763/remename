@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="using:remename.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="700"
         x:Class="remename.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="remename">
+        Title="批量重命名工具"
+        Width="950" Height="700"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        CanResize="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        TransparencyLevelHint="AcrylicBlur">
         <views:MainView />
 </Window>

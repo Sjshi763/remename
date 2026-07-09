@@ -1,0 +1,286 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:remename.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="375" d:DesignHeight="667"
+             x:Class="remename.Views.MobileMainView"
+             x:DataType="vm:MainViewModel">
+
+  <Design.DataContext>
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <!-- 移动端优化样式 - 大触控区域 -->
+    <Style Selector="TextBlock.title-mobile">
+      <Setter Property="FontSize" Value="20" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style Selector="TextBlock.section-title-mobile">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+    <Style Selector="TextBlock.field-label-mobile">
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="FontSize" Value="15" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+    </Style>
+    <Style Selector="TextBlock.muted-mobile">
+      <Setter Property="Foreground" Value="#64748B" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="TextBlock.file-name-mobile">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.file-info-mobile">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="#64748B" />
+    </Style>
+
+    <!-- 移动端输入框 - 大尺寸便于触控 -->
+    <Style Selector="TextBox.mobile-input">
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="Padding" Value="16,12" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+    </Style>
+
+    <!-- 移动端按钮 - 大尺寸便于触控 -->
+    <Style Selector="Button.mobile-button">
+      <Setter Property="MinHeight" Value="52" />
+      <Setter Property="Padding" Value="20,12" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+    <Style Selector="Button.mobile-primary">
+      <Setter Property="Background" Value="#2563EB" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.mobile-secondary">
+      <Setter Property="Background" Value="#F1F5F9" />
+      <Setter Property="Foreground" Value="#334155" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- 卡片样式 -->
+    <Style Selector="Border.mobile-card">
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="20" />
+      <Setter Property="Background" Value="#FFFFFF" />
+      <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+
+    <!-- 移动端列表样式 -->
+    <Style Selector="ListBox.mobile-list">
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style Selector="ListBoxItem.mobile-item">
+      <Setter Property="Padding" Value="16,14" />
+      <Setter Property="MinHeight" Value="60" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Margin" Value="0,0,0,8" />
+      <Setter Property="Background" Value="#F8FAFC" />
+    </Style>
+
+    <!-- CheckBox移动端样式 -->
+    <Style Selector="CheckBox.mobile-checkbox">
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- 移动端单栏布局 -->
+  <Grid RowDefinitions="Auto,*,Auto" Background="#F1F5F9">
+
+    <!-- 顶部标题栏 -->
+    <Border Grid.Row="0" Background="#FFFFFF" Padding="20,16" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+      <StackPanel Spacing="8">
+        <TextBlock Classes="title-mobile" Text="批量重命名" />
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <TextBlock Classes="muted-mobile" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted-mobile" Text="•" IsVisible="{Binding !StatusMessage.Equals(&quot;&quot;)}" />
+          <TextBlock Classes="muted-mobile" Text="{Binding FileList.Count}" Foreground="#2563EB" FontWeight="SemiBold" />
+          <TextBlock Classes="muted-mobile" Text="个文件" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- 主内容区域 - 可滚动 -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="16" Spacing="16">
+
+        <!-- SMB连接 - 移动端简洁版 -->
+        <Border Classes="mobile-card" IsVisible="{Binding IsSmbOptionAvailable}">
+          <StackPanel Spacing="16">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <TextBlock Classes="section-title-mobile" Text="网络连接" VerticalAlignment="Center" />
+              <Border Grid.Column="1" CornerRadius="6" Padding="12,6" VerticalAlignment="Center"
+                      IsVisible="{Binding IsSmbConnected}">
+                <Border.Background>
+                  <SolidColorBrush Color="#DCFCE7" />
+                </Border.Background>
+                <TextBlock Text="已连接" Foreground="#15803D" FontWeight="SemiBold" FontSize="14" />
+              </Border>
+            </Grid>
+
+            <CheckBox Classes="mobile-checkbox" IsChecked="{Binding IsSmbMode}"
+                      Content="使用SMB网络共享" />
+
+            <StackPanel Spacing="12" IsVisible="{Binding IsSmbMode}">
+              <StackPanel>
+                <TextBlock Classes="field-label-mobile" Text="服务器地址" />
+                <TextBox Classes="mobile-input" Text="{Binding SmbServer}"
+                         Watermark="192.168.1.100 或 server" />
+              </StackPanel>
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <StackPanel>
+                  <TextBlock Classes="field-label-mobile" Text="用户名" />
+                  <TextBox Classes="mobile-input" Text="{Binding SmbUsername}"
+                           Watermark="可选" />
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                  <TextBlock Classes="field-label-mobile" Text="密码" />
+                  <TextBox Classes="mobile-input" Text="{Binding SmbPassword}"
+                           PasswordChar="*" Watermark="可选" />
+                </StackPanel>
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Classes="mobile-button mobile-primary" Content="连接"
+                        Command="{Binding ConnectSmbCommand}" HorizontalAlignment="Stretch" />
+                <Button Grid.Column="1" Classes="mobile-button mobile-secondary" Content="断开"
+                        Command="{Binding DisconnectSmbCommand}"
+                        HorizontalAlignment="Stretch" IsEnabled="{Binding IsSmbConnected}" />
+              </Grid>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- 目标文件夹 - 移动端简化 -->
+        <Border Classes="mobile-card">
+          <StackPanel Spacing="16">
+            <TextBlock Classes="section-title-mobile" Text="目标文件夹" />
+
+            <TextBox Classes="mobile-input" Text="{Binding SelectedPath}"
+                     Watermark="选择或输入文件夹路径" AcceptsReturn="False" />
+
+            <Button Classes="mobile-button mobile-secondary" Content="浏览文件夹..."
+                    Command="{Binding SelectFolderCommand}"
+                    HorizontalAlignment="Stretch" IsVisible="{Binding !IsSmbMode}" />
+
+            <Button Classes="mobile-button mobile-secondary" Content="刷新列表"
+                    Command="{Binding RefreshCommand}"
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding !SelectedPath.Equals(&quot;&quot;)}" />
+          </StackPanel>
+        </Border>
+
+        <!-- 文件列表 - 移动端大卡片样式 -->
+        <Border Classes="mobile-card">
+          <StackPanel Spacing="16">
+            <!-- 文件列表标题和工具 -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <TextBlock Classes="section-title-mobile" Text="文件列表" />
+              <Button Grid.Column="1" Classes="mobile-button mobile-secondary"
+                      Content="全选" Command="{Binding ToggleSelectAllCommand}"
+                      MinWidth="80" MinHeight="40" Padding="12,8" />
+            </Grid>
+
+            <!-- 过滤搜索 -->
+            <TextBox Classes="mobile-input" Text="{Binding FilterText}"
+                     Watermark="搜索过滤文件..." />
+
+            <!-- 移动端文件列表 - 大触控项 -->
+            <ListBox Classes="mobile-list" ItemsSource="{Binding FileList}" MinHeight="200" MaxHeight="350">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:FileItemInfo">
+                  <Border Classes="mobile-item" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                      <CheckBox Classes="mobile-checkbox" Grid.Column="0"
+                                IsChecked="{Binding IsSelected}" MinWidth="32" />
+
+                      <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Classes="file-name-mobile" Text="{Binding Name}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Classes="file-info-mobile" Text="{Binding SizeFormatted}" />
+                          <TextBlock Classes="file-info-mobile" Text="•" />
+                          <TextBlock Classes="file-info-mobile" Text="{Binding Extension}" />
+                        </StackPanel>
+                      </StackPanel>
+
+                      <!-- 移动端简化，只显示时间 -->
+                      <TextBlock Grid.Column="2" Classes="file-info-mobile"
+                                 Text="{Binding ModifiedFormatted}" Width="100"
+                                 TextAlignment="Right" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 选中数量显示 -->
+            <Border CornerRadius="6" Padding="12,8" Background="#DBEAFE"
+                    IsVisible="{Binding SelectedCount&gt;0}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Foreground="#2563EB" FontWeight="SemiBold" FontSize="14"
+                           Text="{Binding SelectedCount}" />
+                <TextBlock Foreground="#2563EB" FontSize="14" Text="个文件已选中" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Border>
+
+        <!-- 重命名规则 - 移动端底部卡片 -->
+        <Border Classes="mobile-card">
+          <StackPanel Spacing="16">
+            <TextBlock Classes="section-title-mobile" Text="重命名规则" />
+
+            <StackPanel>
+              <TextBlock Classes="field-label-mobile" Text="搜索内容" />
+              <TextBox Classes="mobile-input" Text="{Binding SearchText}"
+                       Watermark="要替换的文字" />
+            </StackPanel>
+
+            <StackPanel>
+              <TextBlock Classes="field-label-mobile" Text="替换为" />
+              <TextBox Classes="mobile-input" Text="{Binding ReplaceText}"
+                       Watermark="新的文字（可为空）" />
+            </StackPanel>
+
+            <!-- 移动端大按钮 -->
+            <Button Classes="mobile-button mobile-primary" Content="执行重命名"
+                    Command="{Binding RenameCommand}"
+                    HorizontalAlignment="Stretch" MinHeight="56"
+                    IsEnabled="{Binding !SearchText.Equals(&quot;&quot;)}" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- 底部固定操作栏 -->
+    <Border Grid.Row="2" Background="#FFFFFF" Padding="16,12"
+            BorderBrush="#E2E8F0" BorderThickness="0,1,0,0"
+            IsVisible="{Binding !SearchText.Equals(&quot;&quot;)}">
+      <Button Classes="mobile-button mobile-primary" Content="执行重命名"
+              Command="{Binding RenameCommand}"
+              HorizontalAlignment="Stretch" MinHeight="56" />
+    </Border>
+  </Grid>
+</UserControl>

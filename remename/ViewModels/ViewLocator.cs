@@ -3,11 +3,13 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using remename.ViewModels;
+using remename.Helpers;
 
 namespace remename;
 
 /// <summary>
 /// Given a view model, returns the corresponding view if possible.
+/// Automatically selects PC or Mobile view based on the platform.
 /// </summary>
 [RequiresUnreferencedCode(
     "Default implementation of ViewLocator involves reflection which may be trimmed away.",
@@ -24,7 +26,23 @@ public class ViewLocator : IDataTemplate
 
         if (type != null)
         {
-            return (Control)Activator.CreateInstance(type)!;
+            var control = (Control)Activator.CreateInstance(type)!;
+
+            // 根据平台决定使用哪个View
+            if (param is MainViewModel)
+            {
+                // 移动端使用MobileMainView
+                if (PlatformHelper.IsMobile)
+                {
+                    var mobileViewType = Type.GetType("remename.Views.MobileMainView");
+                    if (mobileViewType != null)
+                    {
+                        return (Control)Activator.CreateInstance(mobileViewType)!;
+                    }
+                }
+            }
+
+            return control;
         }
 
         return new TextBlock { Text = "Not Found: " + name };

@@ -5,8 +5,34 @@ using System.Collections.ObjectModel;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using remename.Helpers;
 
 namespace remename.ViewModels;
+
+public class FileItemInfo
+{
+    public string Name { get; set; } = string.Empty;
+    public string Extension { get; set; } = string.Empty;
+    public long Size { get; set; }
+    public DateTime ModifiedTime { get; set; }
+    public bool IsSelected { get; set; }
+    public string SizeFormatted => FormatFileSize(Size);
+    public string ModifiedFormatted => ModifiedTime.ToString("yyyy-MM-dd HH:mm");
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+        return $"{size:0.##} {sizes[order]}";
+    }
+}
 
 public partial class MainViewModel : ViewModelBase
 {
@@ -23,7 +49,7 @@ public partial class MainViewModel : ViewModelBase
     private string _replaceText = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<string> _fileList = new();
+    private ObservableCollection<FileItemInfo> _fileList = new();
 
     [ObservableProperty]
     private bool _isSmbOptionAvailable = false;
@@ -46,6 +72,24 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = string.Empty;
 
+    [ObservableProperty]
+    private string _filterText = string.Empty;
+
+    [ObservableProperty]
+    private bool _selectAll = false;
+
+    [ObservableProperty]
+    private int _selectedCount = 0;
+
+    [ObservableProperty]
+    private string _sortBy = "Name";
+
+    [ObservableProperty]
+    private bool _sortAscending = true;
+
+    public bool IsDesktop => PlatformHelper.IsDesktop;
+    public bool IsMobile => PlatformHelper.IsMobile;
+
     public IFolderPickerService? FolderPickerService { get; set; }
 
     public IAsyncRelayCommand SelectFolderCommand =>
@@ -62,10 +106,117 @@ public partial class MainViewModel : ViewModelBase
     public IAsyncRelayCommand DisconnectSmbCommand =>
         _disconnectSmbCommand ??= new AsyncRelayCommand(ExecuteDisconnectSmbAsync);
 
+    private AsyncRelayCommand? _refreshCommand;
+    public IAsyncRelayCommand RefreshCommand =>
+        _refreshCommand ??= new AsyncRelayCommand(ExecuteRefreshAsync);
+
+    private AsyncRelayCommand? _toggleSelectAllCommand;
+    public IAsyncRelayCommand ToggleSelectAllCommand =>
+        _toggleSelectAllCommand ??= new AsyncRelayCommand(ExecuteToggleSelectAll);
+
     public MainViewModel()
     {
         _smbService = new SmbService();
-        IsSmbOptionAvailable = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        // SMB功能主要用于移动端，桌面端可以直接访问本地文件
+        IsSmbOptionAvailable = Helpers.PlatformHelper.IsMobile;
+    }
+
+    partial void OnFilterTextChanged(string value)
+    {
+        ApplyFilter();
+    }
+
+    partial void OnSelectAllChanged(bool value)
+    {
+        foreach (var file in FileList)
+        {
+            file.IsSelected = value;
+        }
+        UpdateSelectedCount();
+    }
+
+    partial void OnSortByChanged(string value)
+    {
+        ApplySorting();
+    }
+
+    partial void OnSortAscendingChanged(bool value)
+    {
+        ApplySorting();
+    }
+
+    private void ApplyFilter()
+    {
+        // 过滤逻辑在加载文件时处理
+        if (!string.IsNullOrEmpty(SelectedPath))
+        {
+            if (IsSmbMode && _smbService != null)
+            {
+                _ = LoadSmbFilesAsync(SelectedPath);
+            }
+            else if (Directory.Exists(SelectedPath))
+            {
+                LoadFilesFromPath(SelectedPath);
+            }
+        }
+    }
+
+    private void ApplySorting()
+    {
+        var sorted = SortBy switch
+        {
+            "Name" => SortAscending
+                ? FileList.OrderBy(f => f.Name).ToList()
+                : FileList.OrderByDescending(f => f.Name).ToList(),
+            "Size" => SortAscending
+                ? FileList.OrderBy(f => f.Size).ToList()
+                : FileList.OrderByDescending(f => f.Size).ToList(),
+            "Modified" => SortAscending
+                ? FileList.OrderBy(f => f.ModifiedTime).ToList()
+                : FileList.OrderByDescending(f => f.ModifiedTime).ToList(),
+            "Extension" => SortAscending
+                ? FileList.OrderBy(f => f.Extension).ToList()
+                : FileList.OrderByDescending(f => f.Extension).ToList(),
+            _ => FileList.ToList()
+        };
+
+        FileList.Clear();
+        foreach (var item in sorted)
+        {
+            FileList.Add(item);
+        }
+    }
+
+    private void UpdateSelectedCount()
+    {
+        SelectedCount = FileList.Count(f => f.IsSelected);
+    }
+
+    public void OnFileSelectionChanged()
+    {
+        UpdateSelectedCount();
+        SelectAll = FileList.Count > 0 && FileList.All(f => f.IsSelected);
+    }
+
+    private async Task ExecuteRefreshAsync()
+    {
+        if (!string.IsNullOrEmpty(SelectedPath))
+        {
+            if (IsSmbMode)
+            {
+                await LoadSmbFilesAsync(SelectedPath);
+            }
+            else
+            {
+                await Task.Run(() => LoadFilesFromPath(SelectedPath));
+            }
+        }
+    }
+
+    private Task ExecuteToggleSelectAll()
+    {
+        SelectAll = !SelectAll;
+        return Task.CompletedTask;
     }
 
     private async Task ExecuteSelectFolderAsync()
@@ -144,11 +295,26 @@ public partial class MainViewModel : ViewModelBase
             FileList.Clear();
 
             var files = await _smbService.GetFilesAsync(path);
-            foreach (var file in files)
+
+            // 应用过滤
+            var filteredFiles = string.IsNullOrEmpty(FilterText)
+                ? files
+                : files.Where(f => f.Contains(FilterText, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            foreach (var file in filteredFiles)
             {
-                FileList.Add(file);
+                var fileInfo = new FileItemInfo
+                {
+                    Name = file,
+                    Extension = Path.GetExtension(file),
+                    Size = 0, // SMB暂时不获取大小
+                    ModifiedTime = DateTime.Now
+                };
+                FileList.Add(fileInfo);
             }
-            StatusMessage = $"已加载 {files.Count} 个文件";
+
+            ApplySorting();
+            StatusMessage = $"已加载 {filteredFiles.Count} 个文件";
         }
         catch (Exception ex)
         {
@@ -256,18 +422,28 @@ public partial class MainViewModel : ViewModelBase
             return;
         }
 
-        var files = Directory.GetFiles(SelectedPath);
+        var filesToRename = SelectedCount > 0
+            ? FileList.Where(f => f.IsSelected).ToList()
+            : FileList.ToList();
+
         int renamedCount = 0;
-        foreach (var file in files)
+        foreach (var fileItem in filesToRename)
         {
-            string fileName = Path.GetFileName(file);
-            string newFileName = fileName.Replace(SearchText, ReplaceText);
-            
-            if (newFileName != fileName)
+            string file = Path.Combine(SelectedPath, fileItem.Name);
+            string newFileName = fileItem.Name.Replace(SearchText, ReplaceText);
+
+            if (newFileName != fileItem.Name)
             {
                 string newPath = Path.Combine(SelectedPath, newFileName);
-                File.Move(file, newPath);
-                renamedCount++;
+                try
+                {
+                    File.Move(file, newPath);
+                    renamedCount++;
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"重命名 {fileItem.Name} 失败: {ex.Message}";
+                }
             }
         }
         StatusMessage = $"已重命名 {renamedCount} 个文件";
@@ -281,15 +457,18 @@ public partial class MainViewModel : ViewModelBase
 
         try
         {
-            var files = await _smbService.GetFilesAsync(SelectedPath);
+            var filesToRename = SelectedCount > 0
+                ? FileList.Where(f => f.IsSelected).ToList()
+                : FileList.ToList();
+
             int renamedCount = 0;
 
-            foreach (var file in files)
+            foreach (var fileItem in filesToRename)
             {
-                string newFileName = file.Replace(SearchText, ReplaceText);
-                if (newFileName != file)
+                string newFileName = fileItem.Name.Replace(SearchText, ReplaceText);
+                if (newFileName != fileItem.Name)
                 {
-                    var filePath = SelectedPath.TrimEnd('/') + "/" + file;
+                    var filePath = SelectedPath.TrimEnd('/') + "/" + fileItem.Name;
                     await _smbService.RenameFileAsync(filePath, newFileName);
                     renamedCount++;
                 }
@@ -329,11 +508,27 @@ public partial class MainViewModel : ViewModelBase
             }
 
             var files = Directory.GetFiles(path);
-            foreach (var file in files)
+
+            // 应用过滤
+            var filteredFiles = string.IsNullOrEmpty(FilterText)
+                ? files.ToList()
+                : files.Where(f => Path.GetFileName(f).Contains(FilterText, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            foreach (var file in filteredFiles)
             {
-                FileList.Add(Path.GetFileName(file));
+                var fileInfo = new FileInfo(file);
+                var fileItem = new FileItemInfo
+                {
+                    Name = fileInfo.Name,
+                    Extension = fileInfo.Extension,
+                    Size = fileInfo.Length,
+                    ModifiedTime = fileInfo.LastWriteTime
+                };
+                FileList.Add(fileItem);
             }
-            StatusMessage = $"已加载 {files.Length} 个文件";
+
+            ApplySorting();
+            StatusMessage = $"已加载 {filteredFiles.Count} 个文件";
         }
         catch (Exception ex)
         {

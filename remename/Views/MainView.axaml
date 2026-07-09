@@ -3,147 +3,296 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:remename.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             xmlns:helpers="using:remename.Helpers"
+             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="700"
              x:Class="remename.Views.MainView"
              x:DataType="vm:MainViewModel">
+
   <Design.DataContext>
     <vm:MainViewModel />
   </Design.DataContext>
 
   <UserControl.Styles>
+    <!-- 基础样式 -->
     <Style Selector="TextBlock.title">
       <Setter Property="FontSize" Value="24" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,4" />
+      <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
     <Style Selector="TextBlock.section-title">
-      <Setter Property="FontSize" Value="15" />
+      <Setter Property="FontSize" Value="16" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,10" />
+      <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
     <Style Selector="TextBlock.field-label">
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,5" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Margin" Value="0,0,0,6" />
     </Style>
     <Style Selector="TextBlock.muted">
       <Setter Property="Foreground" Value="#64748B" />
+      <Setter Property="FontSize" Value="13" />
     </Style>
+    <Style Selector="TextBlock.file-name">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <Style Selector="TextBlock.file-info">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#64748B" />
+    </Style>
+
+    <!-- 输入框样式 -->
     <Style Selector="TextBox">
-      <Setter Property="MinHeight" Value="40" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="CornerRadius" Value="6" />
     </Style>
+    <Style Selector="TextBox.pc-mode">
+      <Setter Property="MinHeight" Value="36" />
+    </Style>
+    <Style Selector="TextBox.mobile-mode">
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <!-- 按钮样式 -->
     <Style Selector="Button">
-      <Setter Property="MinHeight" Value="40" />
-      <Setter Property="Padding" Value="14,6" />
+      <Setter Property="MinHeight" Value="36" />
+      <Setter Property="Padding" Value="16,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="14" />
     </Style>
     <Style Selector="Button.primary">
       <Setter Property="Background" Value="#2563EB" />
       <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="Button.secondary">
+      <Setter Property="Background" Value="#F1F5F9" />
+      <Setter Property="Foreground" Value="#334155" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.mobile-action">
+      <Setter Property="MinHeight" Value="52" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.icon-button">
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="MinWidth" Value="32" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- 分隔线样式 -->
     <Style Selector="Border.section">
-      <Setter Property="BorderBrush" Value="#E5E7EB" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="16" />
+      <Setter Property="Background" Value="#FAFAFA" />
+    </Style>
+    <Style Selector="Border.divider">
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
       <Setter Property="BorderThickness" Value="0,1,0,0" />
-      <Setter Property="Padding" Value="0,16,0,0" />
-      <Setter Property="Margin" Value="0,14,0,0" />
+      <Setter Property="Margin" Value="0,16,0,0" />
+    </Style>
+
+    <!-- ListBox样式 -->
+    <Style Selector="ListBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Background" Value="White" />
+      <Setter Property="Padding" Value="4" />
+    </Style>
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="MinHeight" Value="44" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#F1F5F9" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#DBEAFE" />
     </Style>
   </UserControl.Styles>
 
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Margin="20" Spacing="14" MaxWidth="760" HorizontalAlignment="Stretch">
-      <StackPanel Spacing="2">
-        <TextBlock Classes="title" Text="批量重命名" />
-        <TextBlock Classes="muted" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+  <!-- PC端布局：双栏结构 -->
+  <Grid x:Name="LayoutRoot" RowDefinitions="Auto,*">
+    <!-- 头部标题栏 -->
+    <Border Grid.Row="0" Background="#F8FAFC" Padding="24,16" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+      <StackPanel Spacing="6" MaxWidth="1200" HorizontalAlignment="Stretch">
+        <TextBlock Classes="title" Text="批量重命名工具" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Classes="muted" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
+          <TextBlock Classes="muted" Text="|" IsVisible="{Binding !StatusMessage.Equals(&quot;&quot;)}" />
+          <TextBlock Classes="muted" Text="{Binding FileList.Count}" Foreground="#2563EB" FontWeight="SemiBold" />
+          <TextBlock Classes="muted" Text="个文件" />
+          <TextBlock Classes="muted" Text="|" IsVisible="{Binding SelectedCount&gt;0}" />
+          <TextBlock Classes="muted" Text="{Binding SelectedCount}" Foreground="#16A34A" FontWeight="SemiBold"
+                     IsVisible="{Binding SelectedCount&gt;0}" />
+          <TextBlock Classes="muted" Text="个已选中" IsVisible="{Binding SelectedCount&gt;0}" />
+        </StackPanel>
       </StackPanel>
+    </Border>
 
-      <Border Classes="section" IsVisible="{Binding IsSmbOptionAvailable}">
-        <StackPanel Spacing="10">
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-            <StackPanel>
-              <TextBlock Classes="section-title" Text="连接方式" />
-              <CheckBox IsChecked="{Binding IsSmbMode}" Content="使用 SMB 网络共享" />
+    <!-- 主内容区域 - PC端双栏布局 -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <Grid MaxWidth="1200" Margin="24,20" ColumnDefinitions="380,*" ColumnSpacing="20">
+
+        <!-- 左栏：连接和设置 -->
+        <StackPanel Spacing="16">
+
+          <!-- SMB连接区域 -->
+          <Border Classes="section" IsVisible="{Binding IsSmbOptionAvailable}">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <TextBlock Classes="section-title" Text="SMB网络连接" />
+                <Border Grid.Column="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center"
+                        IsVisible="{Binding IsSmbConnected}">
+                  <Border.Background>
+                    <SolidColorBrush Color="#DCFCE7" />
+                  </Border.Background>
+                  <TextBlock Text="已连接" Foreground="#15803D" FontWeight="SemiBold" FontSize="12" />
+                </Border>
+              </Grid>
+
+              <CheckBox IsChecked="{Binding IsSmbMode}" Content="启用SMB模式"
+                        FontWeight="Medium" />
+
+              <StackPanel Spacing="10" IsVisible="{Binding IsSmbMode}">
+                <StackPanel>
+                  <TextBlock Classes="field-label" Text="服务器地址" />
+                  <TextBox Text="{Binding SmbServer}" Watermark="192.168.1.100 或 server/share" />
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                  <StackPanel>
+                    <TextBlock Classes="field-label" Text="用户名" />
+                    <TextBox Text="{Binding SmbUsername}" Watermark="可选" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1">
+                    <TextBlock Classes="field-label" Text="密码" />
+                    <TextBox Text="{Binding SmbPassword}" PasswordChar="*" Watermark="可选" />
+                  </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                  <Button Content="连接" Command="{Binding ConnectSmbCommand}" Classes="primary"
+                          HorizontalAlignment="Stretch" />
+                  <Button Grid.Column="1" Content="断开" Command="{Binding DisconnectSmbCommand}"
+                          Classes="secondary" HorizontalAlignment="Stretch"
+                          IsEnabled="{Binding IsSmbConnected}" />
+                </Grid>
+              </StackPanel>
             </StackPanel>
-            <Border Grid.Column="1"
-                    BorderBrush="#16A34A"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10,5"
-                    VerticalAlignment="Top"
-                    IsVisible="{Binding IsSmbConnected}">
-              <TextBlock Text="已连接" Foreground="#15803D" FontWeight="SemiBold" />
-            </Border>
-            <Border Grid.Column="1"
-                    BorderBrush="#CBD5E1"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10,5"
-                    VerticalAlignment="Top"
-                    IsVisible="{Binding !IsSmbConnected}">
-              <TextBlock Text="未连接" Foreground="#64748B" />
-            </Border>
-          </Grid>
+          </Border>
 
-          <StackPanel Spacing="8" IsVisible="{Binding IsSmbMode}">
-            <StackPanel>
-              <TextBlock Classes="field-label" Text="服务器地址" />
-              <TextBox Text="{Binding SmbServer}" PlaceholderText="192.168.1.100 或 192.168.1.100/share" />
+          <!-- 目标路径 -->
+          <Border Classes="section">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="section-title" Text="目标文件夹" />
+              <TextBox Text="{Binding SelectedPath}" Watermark="选择或输入文件夹路径"
+                       AcceptsReturn="False" />
+              <Button Content="浏览文件夹..." Command="{Binding SelectFolderCommand}"
+                      Classes="secondary" HorizontalAlignment="Stretch"
+                      IsVisible="{Binding !IsSmbMode}" />
+              <Button Content="刷新列表" Command="{Binding RefreshCommand}"
+                      Classes="secondary" HorizontalAlignment="Stretch"
+                      IsEnabled="{Binding !SelectedPath.Equals(&quot;&quot;)}" />
             </StackPanel>
+          </Border>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+          <!-- 重命名规则 -->
+          <Border Classes="section">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="section-title" Text="重命名规则" />
               <StackPanel>
-                <TextBlock Classes="field-label" Text="用户名" />
-                <TextBox Text="{Binding SmbUsername}" PlaceholderText="用户名" />
+                <TextBlock Classes="field-label" Text="搜索内容" />
+                <TextBox Text="{Binding SearchText}" Watermark="要替换的文字" />
               </StackPanel>
-              <StackPanel Grid.Column="1">
-                <TextBlock Classes="field-label" Text="密码" />
-                <TextBox Text="{Binding SmbPassword}" PasswordChar="*" PlaceholderText="密码" />
+              <StackPanel>
+                <TextBlock Classes="field-label" Text="替换为" />
+                <TextBox Text="{Binding ReplaceText}" Watermark="新的文字（可为空）" />
               </StackPanel>
-            </Grid>
-
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-              <Button Content="连接" Command="{Binding ConnectSmbCommand}" Classes="primary" />
-              <Button Grid.Column="1" Content="断开" Command="{Binding DisconnectSmbCommand}"
-                      IsEnabled="{Binding IsSmbConnected}" />
-            </Grid>
-          </StackPanel>
-        </StackPanel>
-      </Border>
-
-      <Border Classes="section">
-        <StackPanel Spacing="10">
-          <TextBlock Classes="section-title" Text="目标路径" />
-          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-            <TextBox Text="{Binding SelectedPath}" PlaceholderText="选择本地文件夹，或输入 smb://server/share/path" />
-            <Button Grid.Column="1"
-                    Content="浏览"
-                    Command="{Binding SelectFolderCommand}"
-                    IsVisible="{Binding !IsSmbMode}" />
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <Border Classes="section">
-        <StackPanel Spacing="10">
-          <TextBlock Classes="section-title" Text="文件列表" />
-          <ListBox ItemsSource="{Binding FileList}" MinHeight="180" MaxHeight="260" />
-        </StackPanel>
-      </Border>
-
-      <Border Classes="section">
-        <StackPanel Spacing="10">
-          <TextBlock Classes="section-title" Text="重命名规则" />
-          <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-            <StackPanel>
-              <TextBlock Classes="field-label" Text="搜索" />
-              <TextBox Text="{Binding SearchText}" PlaceholderText="要替换的内容" />
+              <Button Content="执行重命名" Command="{Binding RenameCommand}" Classes="primary"
+                      HorizontalAlignment="Stretch" MinHeight="44"
+                      IsEnabled="{Binding !SearchText.Equals(&quot;&quot;)}" />
             </StackPanel>
-            <StackPanel Grid.Column="1">
-              <TextBlock Classes="field-label" Text="替换为" />
-              <TextBox Text="{Binding ReplaceText}" PlaceholderText="新的内容" />
-            </StackPanel>
-          </Grid>
-          <Button Content="重命名" Command="{Binding RenameCommand}" Classes="primary"
-                  HorizontalAlignment="Stretch" />
+          </Border>
         </StackPanel>
-      </Border>
-    </StackPanel>
-  </ScrollViewer>
+
+        <!-- 右栏：文件列表和详情 -->
+        <Border Classes="section">
+          <Grid RowDefinitions="Auto,*" ColumnDefinitions="*" Spacing="0">
+
+            <!-- 文件列表工具栏 -->
+            <Border Grid.Row="0" Padding="0,0,0,12" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+              <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+
+                <!-- 全选复选框 -->
+                <CheckBox Grid.Column="0" IsChecked="{Binding SelectAll}" Content="全选"
+                          FontWeight="Medium" Command="{Binding ToggleSelectAllCommand}" />
+
+                <!-- 过滤输入 -->
+                <TextBox Grid.Column="1" Text="{Binding FilterText}" Watermark="搜索过滤文件..."
+                         HorizontalAlignment="Stretch" />
+
+                <!-- 统计信息 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                  <TextBlock Classes="file-info" Text="{Binding FileList.Count}" FontWeight="SemiBold" />
+                  <TextBlock Classes="file-info" Text="项" />
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <!-- 文件列表 - 使用ListBox替代DataGrid -->
+            <ListBox Grid.Row="1" ItemsSource="{Binding FileList}" MinHeight="400"
+                     MaxHeight="500">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="vm:FileItemInfo">
+                  <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,10">
+                    <Grid ColumnDefinitions="Auto,*,100,100,120" ColumnSpacing="12">
+                      <!-- 选择复选框 -->
+                      <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}"
+                                VerticalAlignment="Center" />
+
+                      <!-- 文件名 -->
+                      <StackPanel Grid.Column="1" Spacing="2">
+                        <TextBlock Classes="file-name" Text="{Binding Name}" />
+                        <TextBlock Classes="file-info" Text="{Binding Extension}" />
+                      </StackPanel>
+
+                      <!-- 大小 -->
+                      <TextBlock Grid.Column="2" Classes="file-info"
+                                 Text="{Binding SizeFormatted}"
+                                 VerticalAlignment="Center" />
+
+                      <!-- 类型 -->
+                      <TextBlock Grid.Column="3" Classes="file-info"
+                                 Text="{Binding Extension}"
+                                 VerticalAlignment="Center" />
+
+                      <!-- 修改时间 -->
+                      <TextBlock Grid.Column="4" Classes="file-info"
+                                 Text="{Binding ModifiedFormatted}"
+                                 VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
 </UserControl>
