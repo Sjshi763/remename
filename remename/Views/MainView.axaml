@@ -54,7 +54,7 @@
         <TextBlock Classes="muted" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
       </StackPanel>
 
-      <Border Classes="section">
+      <Border Classes="section" IsVisible="{Binding IsSmbOptionAvailable}">
         <StackPanel Spacing="10">
           <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <StackPanel>

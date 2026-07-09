@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.IO;
 using System.Collections.ObjectModel;
@@ -24,6 +24,9 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<string> _fileList = new();
+
+    [ObservableProperty]
+    private bool _isSmbOptionAvailable = false;
 
     [ObservableProperty]
     private bool _isSmbMode = false;
@@ -62,6 +65,7 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         _smbService = new SmbService();
+        IsSmbOptionAvailable = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
     }
 
     private async Task ExecuteSelectFolderAsync()
