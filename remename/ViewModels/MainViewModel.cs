@@ -89,6 +89,12 @@ public partial class MainViewModel : ViewModelBase
     public bool IsDesktop => PlatformHelper.IsDesktop;
     public bool IsMobile => PlatformHelper.IsMobile;
 
+    // 辅助属性用于XAML绑定
+    public bool HasStatusMessage => !string.IsNullOrEmpty(StatusMessage);
+    public bool HasSelectedPath => !string.IsNullOrEmpty(SelectedPath);
+    public bool HasSearchText => !string.IsNullOrEmpty(SearchText);
+    public bool HasSelectedFiles => SelectedCount > 0;
+
     public IFolderPickerService? FolderPickerService { get; set; }
 
     public IAsyncRelayCommand SelectFolderCommand =>
@@ -144,6 +150,21 @@ public partial class MainViewModel : ViewModelBase
         ApplySorting();
     }
 
+    partial void OnStatusMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasStatusMessage));
+    }
+
+    partial void OnSelectedPathChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasSelectedPath));
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasSearchText));
+    }
+
     private void ApplyFilter()
     {
         // 过滤逻辑在加载文件时处理
@@ -189,6 +210,7 @@ public partial class MainViewModel : ViewModelBase
     private void UpdateSelectedCount()
     {
         SelectedCount = FileList.Count(f => f.IsSelected);
+        OnPropertyChanged(nameof(HasSelectedFiles));
     }
 
     public void OnFileSelectionChanged()

@@ -12,7 +12,6 @@
         MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         CanResize="True"
-        ExtendClientAreaChromeHints="PreferSystemChrome"
         TransparencyLevelHint="AcrylicBlur">
         <views:MainView />
 </Window>

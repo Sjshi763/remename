@@ -114,7 +114,7 @@
         <TextBlock Classes="title-mobile" Text="批量重命名" />
         <StackPanel Orientation="Horizontal" Spacing="6">
           <TextBlock Classes="muted-mobile" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
-          <TextBlock Classes="muted-mobile" Text="•" IsVisible="{Binding !StatusMessage.Equals(&quot;&quot;)}" />
+          <TextBlock Classes="muted-mobile" Text="•" IsVisible="{Binding HasStatusMessage}" />
           <TextBlock Classes="muted-mobile" Text="{Binding FileList.Count}" Foreground="#2563EB" FontWeight="SemiBold" />
           <TextBlock Classes="muted-mobile" Text="个文件" />
         </StackPanel>
@@ -146,19 +146,19 @@
               <StackPanel>
                 <TextBlock Classes="field-label-mobile" Text="服务器地址" />
                 <TextBox Classes="mobile-input" Text="{Binding SmbServer}"
-                         Watermark="192.168.1.100 或 server" />
+                         PlaceholderText="192.168.1.100 或 server" />
               </StackPanel>
 
               <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                 <StackPanel>
                   <TextBlock Classes="field-label-mobile" Text="用户名" />
                   <TextBox Classes="mobile-input" Text="{Binding SmbUsername}"
-                           Watermark="可选" />
+                           PlaceholderText="可选" />
                 </StackPanel>
                 <StackPanel Grid.Column="1">
                   <TextBlock Classes="field-label-mobile" Text="密码" />
                   <TextBox Classes="mobile-input" Text="{Binding SmbPassword}"
-                           PasswordChar="*" Watermark="可选" />
+                           PasswordChar="*" PlaceholderText="可选" />
                 </StackPanel>
               </Grid>
 
@@ -179,7 +179,7 @@
             <TextBlock Classes="section-title-mobile" Text="目标文件夹" />
 
             <TextBox Classes="mobile-input" Text="{Binding SelectedPath}"
-                     Watermark="选择或输入文件夹路径" AcceptsReturn="False" />
+                     PlaceholderText="选择或输入文件夹路径" AcceptsReturn="False" />
 
             <Button Classes="mobile-button mobile-secondary" Content="浏览文件夹..."
                     Command="{Binding SelectFolderCommand}"
@@ -188,7 +188,7 @@
             <Button Classes="mobile-button mobile-secondary" Content="刷新列表"
                     Command="{Binding RefreshCommand}"
                     HorizontalAlignment="Stretch"
-                    IsEnabled="{Binding !SelectedPath.Equals(&quot;&quot;)}" />
+                    IsEnabled="{Binding HasSelectedPath}" />
           </StackPanel>
         </Border>
 
@@ -205,7 +205,7 @@
 
             <!-- 过滤搜索 -->
             <TextBox Classes="mobile-input" Text="{Binding FilterText}"
-                     Watermark="搜索过滤文件..." />
+                     PlaceholderText="搜索过滤文件..." />
 
             <!-- 移动端文件列表 - 大触控项 -->
             <ListBox Classes="mobile-list" ItemsSource="{Binding FileList}" MinHeight="200" MaxHeight="350">
@@ -237,7 +237,7 @@
 
             <!-- 选中数量显示 -->
             <Border CornerRadius="6" Padding="12,8" Background="#DBEAFE"
-                    IsVisible="{Binding SelectedCount&gt;0}">
+                    IsVisible="{Binding HasSelectedFiles}">
               <StackPanel Orientation="Horizontal" Spacing="4">
                 <TextBlock Foreground="#2563EB" FontWeight="SemiBold" FontSize="14"
                            Text="{Binding SelectedCount}" />
@@ -255,20 +255,20 @@
             <StackPanel>
               <TextBlock Classes="field-label-mobile" Text="搜索内容" />
               <TextBox Classes="mobile-input" Text="{Binding SearchText}"
-                       Watermark="要替换的文字" />
+                       PlaceholderText="要替换的文字" />
             </StackPanel>
 
             <StackPanel>
               <TextBlock Classes="field-label-mobile" Text="替换为" />
               <TextBox Classes="mobile-input" Text="{Binding ReplaceText}"
-                       Watermark="新的文字（可为空）" />
+                       PlaceholderText="新的文字（可为空）" />
             </StackPanel>
 
             <!-- 移动端大按钮 -->
             <Button Classes="mobile-button mobile-primary" Content="执行重命名"
                     Command="{Binding RenameCommand}"
                     HorizontalAlignment="Stretch" MinHeight="56"
-                    IsEnabled="{Binding !SearchText.Equals(&quot;&quot;)}" />
+                    IsEnabled="{Binding HasSearchText}" />
           </StackPanel>
         </Border>
       </StackPanel>
@@ -277,7 +277,7 @@
     <!-- 底部固定操作栏 -->
     <Border Grid.Row="2" Background="#FFFFFF" Padding="16,12"
             BorderBrush="#E2E8F0" BorderThickness="0,1,0,0"
-            IsVisible="{Binding !SearchText.Equals(&quot;&quot;)}">
+            IsVisible="{Binding HasSearchText}">
       <Button Classes="mobile-button mobile-primary" Content="执行重命名"
               Command="{Binding RenameCommand}"
               HorizontalAlignment="Stretch" MinHeight="56" />
