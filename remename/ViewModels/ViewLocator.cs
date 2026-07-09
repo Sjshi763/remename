@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using remename.ViewModels;
-using remename.Helpers;
 
 namespace remename;
 

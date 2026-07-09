@@ -1,4 +1,4 @@
-namespace remename.Helpers;
+namespace remename.ViewModels;
 
 public static class PlatformHelper
 {

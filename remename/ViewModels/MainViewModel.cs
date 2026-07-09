@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using remename.Helpers;
 
 namespace remename.ViewModels;
 
@@ -117,8 +116,8 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         _smbService = new SmbService();
-        // SMB功能主要用于移动端，桌面端可以直接访问本地文件
-        IsSmbOptionAvailable = Helpers.PlatformHelper.IsMobile;
+        // SMB功能主要用于移动端,桌面端可以直接访问本地文件
+        IsSmbOptionAvailable = PlatformHelper.IsMobile;
     }
 
     partial void OnFilterTextChanged(string value)
