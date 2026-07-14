@@ -2,26 +2,15 @@ namespace remename.ViewModels;
 
 public static class PlatformHelper
 {
-    // 使用预编译指令来区分平台 - 这是最可靠的方式
+    // This project targets net10.0 and is referenced by the platform heads, so
+    // ANDROID/IOS compile constants are not available here. Detect at runtime.
     public static bool IsDesktop => !IsMobile;
 
-#if ANDROID || IOS
-    public static bool IsMobile => true;
-#else
-    public static bool IsMobile => false;
-#endif
+    public static bool IsMobile => IsAndroid || IsIOS;
 
-#if ANDROID
-    public static bool IsAndroid => true;
-#else
-    public static bool IsAndroid => false;
-#endif
+    public static bool IsAndroid => System.OperatingSystem.IsAndroid();
 
-#if IOS
-    public static bool IsIOS => true;
-#else
-    public static bool IsIOS => false;
-#endif
+    public static bool IsIOS => System.OperatingSystem.IsIOS();
 
 #if WINDOWS
     public static bool IsWindows => true;

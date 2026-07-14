@@ -24,10 +24,12 @@ public partial class App : Application
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            singleViewPlatform.MainView = new MainView
-            {
-                DataContext = new MainViewModel()
-            };
+            var mainView = PlatformHelper.IsMobile
+                ? (Avalonia.Controls.Control)new MobileMainView()
+                : new MainView();
+
+            mainView.DataContext = new MainViewModel();
+            singleViewPlatform.MainView = mainView;
         }
 
         base.OnFrameworkInitializationCompleted();
