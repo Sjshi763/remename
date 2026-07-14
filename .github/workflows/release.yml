@@ -1,10 +1,91 @@
-name: Build Release for ATC4-HQ
+name: Build remename Release
 
 on:
   release:
     types: [ created ] # 当创建新的 GitHub Release 时触发
 
 jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.x.x'
+
+    - name: Install Android workload
+      run: dotnet workload install android
+
+    - name: Restore Android dependencies
+      run: dotnet restore ./remename.Android/remename.Android.csproj
+
+    - name: Extract Android version
+      shell: pwsh
+      run: |
+        $displayVersion = "${{ github.event.release.tag_name }}" -replace '^v', ''
+        if ([string]::IsNullOrWhiteSpace($displayVersion)) {
+          $displayVersion = "1.0.0"
+        }
+        "ANDROID_DISPLAY_VERSION=$displayVersion" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        "ANDROID_VERSION_CODE=${{ github.run_number }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+    - name: Restore Android signing key
+      if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+      shell: bash
+      run: echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/remename.keystore"
+
+    - name: Publish signed Android APK
+      if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+      run: >-
+        dotnet publish ./remename.Android/remename.Android.csproj
+        --configuration Release
+        --no-restore
+        --output ./android-publish
+        -p:AndroidPackageFormat=apk
+        -p:ApplicationDisplayVersion="$ANDROID_DISPLAY_VERSION"
+        -p:ApplicationVersion="$ANDROID_VERSION_CODE"
+        -p:AndroidKeyStore=true
+        -p:AndroidSigningKeyStore="$RUNNER_TEMP/remename.keystore"
+        -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS"
+        -p:AndroidSigningKeyPass="$ANDROID_KEY_PASSWORD"
+        -p:AndroidSigningStorePass="$ANDROID_STORE_PASSWORD"
+
+    - name: Publish unsigned Android APK
+      if: ${{ env.ANDROID_KEYSTORE_BASE64 == '' }}
+      run: >-
+        dotnet publish ./remename.Android/remename.Android.csproj
+        --configuration Release
+        --no-restore
+        --output ./android-publish
+        -p:AndroidPackageFormat=apk
+        -p:ApplicationDisplayVersion="$ANDROID_DISPLAY_VERSION"
+        -p:ApplicationVersion="$ANDROID_VERSION_CODE"
+
+    - name: Collect Android APK
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path ./android-artifact | Out-Null
+        $signedApk = Get-ChildItem ./android-publish -Recurse -Filter *-Signed.apk | Select-Object -First 1
+        $apk = if ($signedApk) { $signedApk } else { Get-ChildItem ./android-publish -Recurse -Filter *.apk | Select-Object -First 1 }
+        if (-not $apk) { throw "Android publish did not produce an APK." }
+        Copy-Item $apk.FullName ./android-artifact/remename-Android.apk
+
+    - name: Upload Android APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: remename-Android-APK
+        path: android-artifact/remename-Android.apk
+        if-no-files-found: error
+
   build:
     runs-on: windows-latest # 在最新的 Windows 环境下运行
 
@@ -15,10 +96,10 @@ jobs:
     - name: Setup .NET SDK # 步骤2: 安装 .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.x.x' # 指定 .NET 9 LTS 版本，您可以根据您的项目实际使用的版本修改
+        dotnet-version: '10.x.x' # 指定 .NET 9 LTS 版本，您可以根据您的项目实际使用的版本修改
 
     - name: Restore dependencies # 步骤3: 恢复 NuGet 包依赖
-      run: dotnet restore .\remename.Desktop\remename.Desktop.csproj # 修复路径：假设 ATC4-HQ 文件夹在仓库根目录
+      run: dotnet restore .\remename.Desktop\remename.Desktop.csproj
 
     - name: Build project # 步骤4: 构建项目 (Release 配置)
       run: dotnet build .\remename.Desktop\remename.Desktop.csproj --configuration Release --no-restore # 修复路径
@@ -29,7 +110,7 @@ jobs:
     - name: Upload build artifact # 步骤6: 上传构建产物 (publish目录)
       uses: actions/upload-artifact@v4
       with:
-        name: ATC4-HQ-Publish # 产物的名称
+        name: remename-Windows-Publish
         path: publish # 上传publish目录
 
   build-msi: # 用于构建msi
@@ -43,7 +124,7 @@ jobs:
     - name: Download build artifact # 步骤2: 下载 'build' 作业中上传的publish目录
       uses: actions/download-artifact@v4
       with:
-        name: ATC4-HQ-Publish # 指定要下载的产物名称
+        name: remename-Windows-Publish
         path: publish # 将publish目录下载到当前工作目录
 
     - name: Install WiX Toolset
@@ -77,13 +158,13 @@ jobs:
         @"
         <?xml version="1.0" encoding="UTF-8"?>
         <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-          <Product Id="*" Name="ATC4-HQ" Language="1033" Version="$version" Manufacturer="ATC4-HQ" UpgradeCode="12345678-1234-1234-1234-123456789012">
+          <Product Id="*" Name="remename" Language="1033" Version="$version" Manufacturer="remename" UpgradeCode="12345678-1234-1234-1234-123456789012">
             <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
             
-            <MajorUpgrade DowngradeErrorMessage="A newer version of ATC4-HQ is already installed." />
+            <MajorUpgrade DowngradeErrorMessage="A newer version of remename is already installed." />
             <MediaTemplate EmbedCab="yes" />
             
-            <Feature Id="ProductFeature" Title="ATC4-HQ" Level="1">
+            <Feature Id="ProductFeature" Title="remename" Level="1">
               <ComponentGroupRef Id="ProductComponents" />
               <ComponentRef Id="ApplicationShortcut" />
             </Feature>
@@ -92,10 +173,10 @@ jobs:
           <Fragment>
             <Directory Id="TARGETDIR" Name="SourceDir">
               <Directory Id="ProgramFilesFolder">
-                <Directory Id="INSTALLFOLDER" Name="ATC4-HQ" />
+                <Directory Id="INSTALLFOLDER" Name="remename" />
               </Directory>
               <Directory Id="ProgramMenuFolder">
-                <Directory Id="ApplicationProgramsFolder" Name="ATC4-HQ"/>
+                <Directory Id="ApplicationProgramsFolder" Name="remename"/>
               </Directory>
               <Directory Id="DesktopFolder" />
             </Directory>
@@ -105,17 +186,17 @@ jobs:
             <DirectoryRef Id="ApplicationProgramsFolder">
               <Component Id="ApplicationShortcut" Guid="*">
                 <Shortcut Id="ApplicationStartMenuShortcut"
-                          Name="ATC4-HQ"
-                          Description="Launch ATC4-HQ"
-                          Target="[INSTALLFOLDER]ATC4-HQ.exe"
+                          Name="remename"
+                          Description="Launch remename"
+                          Target="[INSTALLFOLDER]remename.exe"
                           WorkingDirectory="INSTALLFOLDER"/>
                 <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-                <RegistryValue Root="HKCU" Key="Software\Microsoft\ATC4-HQ" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+                <RegistryValue Root="HKCU" Key="Software\remename" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
               </Component>
             </DirectoryRef>
           </Fragment>
         </Wix>
-        "@ | Out-File -FilePath "ATC4-HQ.wxs" -Encoding UTF8
+        "@ | Out-File -FilePath "remename.wxs" -Encoding UTF8
 
     - name: Generate components for all files
       run: |
@@ -123,7 +204,7 @@ jobs:
 
     - name: Combine WiX files
       run: |
-        $mainXml = [xml](Get-Content ATC4-HQ.wxs)
+        $mainXml = [xml](Get-Content remename.wxs)
         $componentsXml = [xml](Get-Content components.wxs)
         
         # 将components.xml中的Fragment元素添加到main.xml中
@@ -137,33 +218,41 @@ jobs:
     - name: Build MSI
       run: |
         candle combined.wxs -dPublishDir=publish -out combined.wixobj
-        light combined.wixobj -out ATC4-HQ.msi
+        light combined.wixobj -out remename-Windows.msi
 
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ATC4-HQ-MSI
-        path: ATC4-HQ.msi
+        name: remename-Windows-MSI
+        path: remename-Windows.msi
 
     - name: Download MSI artifact
       uses: actions/download-artifact@v4
       with:
-        name: ATC4-HQ-MSI
+        name: remename-Windows-MSI
         path: msi
 
   Release:
-    needs: build-msi
+    needs: [build-msi, build-android]
     runs-on: windows-latest
 
     steps:
     - name: Download MSI artifact
       uses: actions/download-artifact@v4
       with:
-        name: ATC4-HQ-MSI
+        name: remename-Windows-MSI
         path: msi
+
+    - name: Download Android APK artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: remename-Android-APK
+        path: android
         
-    - name: Upload MSI to Release
+    - name: Upload installers to Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: ./msi/ATC4-HQ.msi
+        files: |
+          ./msi/remename-Windows.msi
+          ./android/remename-Android.apk
