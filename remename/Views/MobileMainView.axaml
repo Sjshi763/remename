@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:remename.ViewModels"
+             xmlns:input="using:Avalonia.Input.TextInput"
              mc:Ignorable="d" d:DesignWidth="375" d:DesignHeight="667"
              x:Class="remename.Views.MobileMainView"
              x:DataType="vm:MainViewModel">
@@ -158,7 +159,10 @@
                 <StackPanel Grid.Column="1">
                   <TextBlock Classes="field-label-mobile" Text="密码" />
                   <TextBox Classes="mobile-input" Text="{Binding SmbPassword}"
-                           PasswordChar="*" PlaceholderText="可选" />
+                           PasswordChar="*" PlaceholderText="可选"
+                           input:TextInputOptions.ContentType="Password"
+                           input:TextInputOptions.IsSensitive="True"
+                           input:TextInputOptions.ShowSuggestions="False" />
                 </StackPanel>
               </Grid>
 
