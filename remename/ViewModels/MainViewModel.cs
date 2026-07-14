@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using remename.Diagnostics;
 
 namespace remename.ViewModels;
 
@@ -286,12 +287,14 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
+            AppLogger.Info($"Connecting to SMB server '{SmbServer}'");
             StatusMessage = "正在连接...";
             if (_smbService == null)
                 _smbService = new SmbService();
 
             await _smbService.ConnectAsync(SmbServer, SmbUsername, SmbPassword);
             IsSmbConnected = true;
+            AppLogger.Info($"Connected to SMB server '{SmbServer}'");
             IsSmbMode = true;
             StatusMessage = "已连接到SMB服务器";
 
@@ -300,6 +303,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            AppLogger.Error($"Failed to connect to SMB server '{SmbServer}'", ex);
             IsSmbConnected = false;
             StatusMessage = $"连接失败: {ex.Message}";
         }
@@ -320,9 +324,11 @@ public partial class MainViewModel : ViewModelBase
             SmbFolders.Clear();
             FileList.Clear();
             StatusMessage = "已断开连接";
+            AppLogger.Info("Disconnected from SMB server");
         }
         catch (Exception ex)
         {
+            AppLogger.Error("Failed to disconnect from SMB server", ex);
             StatusMessage = $"断开连接失败: {ex.Message}";
         }
     }
@@ -335,6 +341,7 @@ public partial class MainViewModel : ViewModelBase
         try
         {
             var normalizedPath = NormalizeSmbPath(path);
+            AppLogger.Info($"Browsing SMB folder '{normalizedPath}'");
             var folders = await _smbService.GetFoldersAsync(normalizedPath);
 
             SmbBrowsePath = normalizedPath;
@@ -353,6 +360,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            AppLogger.Error($"Failed to browse SMB folder '{path}'", ex);
             StatusMessage = $"加载文件夹失败: {ex.Message}";
         }
     }
@@ -397,6 +405,7 @@ public partial class MainViewModel : ViewModelBase
             FileList.Clear();
 
             var files = await _smbService.GetFilesAsync(path);
+            AppLogger.Info($"Loaded {files.Count} SMB file entries from '{path}'");
 
             // 应用过滤
             var filteredFiles = string.IsNullOrEmpty(FilterText)
@@ -420,6 +429,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            AppLogger.Error($"Failed to load SMB files from '{path}'", ex);
             StatusMessage = $"加载文件失败: {ex.Message}";
         }
     }
@@ -442,6 +452,7 @@ public partial class MainViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            AppLogger.Error($"Rename failed in '{SelectedPath}'", ex);
             StatusMessage = $"重命名失败: {ex.Message}";
         }
     }

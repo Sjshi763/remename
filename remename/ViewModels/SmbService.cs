@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using FileAttributes = SMBLibrary.FileAttributes;
+using remename.Diagnostics;
 
 namespace remename;
 
@@ -43,6 +44,7 @@ public class SmbService : ISmbService
                 Disconnect();
 
                 _server = ExtractServerName(server);
+                AppLogger.Info($"SMB transport connecting to '{_server}'");
                 (_domain, _username) = SplitDomainAndUsername(username);
                 _password = password;
 
@@ -60,9 +62,11 @@ public class SmbService : ISmbService
                 EnsureSuccess(status, "list SMB shares");
 
                 _isConnected = true;
+                AppLogger.Info($"SMB authentication succeeded for '{_server}'");
             }
             catch (Exception ex)
             {
+                AppLogger.Error($"SMB connection failed for '{_server}'", ex);
                 Disconnect();
                 throw new Exception($"Failed to connect to SMB server: {ex.Message}", ex);
             }
@@ -83,6 +87,7 @@ public class SmbService : ISmbService
             {
                 EnsureConnected();
                 var smbPath = ParsePath(path);
+                AppLogger.Info($"Enumerating SMB folders at '{path}'");
 
                 if (string.IsNullOrEmpty(smbPath.ShareName))
                 {
@@ -109,6 +114,7 @@ public class SmbService : ISmbService
             {
                 EnsureConnected();
                 var smbPath = ParsePath(path);
+                AppLogger.Info($"Enumerating SMB files at '{path}'");
 
                 if (string.IsNullOrEmpty(smbPath.ShareName))
                 {
@@ -141,6 +147,7 @@ public class SmbService : ISmbService
                 }
 
                 var smbPath = ParsePath(filePath);
+                AppLogger.Info($"Renaming SMB file '{filePath}' to '{newFileName}'");
                 if (string.IsNullOrEmpty(smbPath.ShareName) || string.IsNullOrEmpty(smbPath.RelativePath))
                 {
                     throw new ArgumentException("A file inside an SMB share must be selected before renaming.", nameof(filePath));
