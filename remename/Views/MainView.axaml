@@ -249,7 +249,7 @@
 
                 <!-- 全选复选框 -->
                 <CheckBox Grid.Column="0" IsChecked="{Binding SelectAll}" Content="全选"
-                          FontWeight="Medium" Command="{Binding ToggleSelectAllCommand}" />
+                          FontWeight="Medium" />
 
                 <!-- 过滤输入 -->
                 <TextBox Grid.Column="1" Text="{Binding FilterText}" PlaceholderText="搜索过滤文件..."

@@ -10,13 +10,14 @@ using System.Text.RegularExpressions;
 
 namespace remename.ViewModels;
 
-public class FileItemInfo
+public partial class FileItemInfo : ObservableObject
 {
     public string Name { get; set; } = string.Empty;
     public string Extension { get; set; } = string.Empty;
     public long Size { get; set; }
     public DateTime ModifiedTime { get; set; }
-    public bool IsSelected { get; set; }
+    [ObservableProperty]
+    private bool _isSelected;
     public string SizeFormatted => FormatFileSize(Size);
     public string ModifiedFormatted => ModifiedTime.ToString("yyyy-MM-dd HH:mm");
 
@@ -115,9 +116,9 @@ public partial class MainViewModel : ViewModelBase
     public bool HasSelectedFiles => SelectedCount > 0;
     public bool IsStandardRenameMode => RenameMode == 0;
     public bool IsAnimePresetMode => RenameMode == 1;
-    public bool CanRename => IsAnimePresetMode
+    public bool CanRename => HasSelectedFiles && (IsAnimePresetMode
         ? !string.IsNullOrWhiteSpace(Season)
-        : HasSearchText;
+        : HasSearchText);
     public IReadOnlyList<string> RenameModes { get; } =
         new[] { "普通替换", "模式 1：季度剧集" };
 
@@ -258,6 +259,7 @@ public partial class MainViewModel : ViewModelBase
     {
         SelectedCount = FileList.Count(f => f.IsSelected);
         OnPropertyChanged(nameof(HasSelectedFiles));
+        OnPropertyChanged(nameof(CanRename));
     }
 
     public void OnFileSelectionChanged()
@@ -349,6 +351,7 @@ public partial class MainViewModel : ViewModelBase
             SmbBrowsePath = string.Empty;
             SmbFolders.Clear();
             FileList.Clear();
+            UpdateSelectedCount();
             StatusMessage = "已断开连接";
             AppLogger.Info("Disconnected from SMB server");
         }
@@ -429,6 +432,7 @@ public partial class MainViewModel : ViewModelBase
         {
             SelectedPath = path;
             FileList.Clear();
+            UpdateSelectedCount();
 
             var files = await _smbService.GetFilesAsync(path);
             AppLogger.Info($"Loaded {files.Count} SMB file entries from '{path}'");
@@ -446,6 +450,11 @@ public partial class MainViewModel : ViewModelBase
                     Extension = Path.GetExtension(file),
                     Size = 0, // SMB暂时不获取大小
                     ModifiedTime = DateTime.Now
+                };
+                fileInfo.PropertyChanged += (_, args) =>
+                {
+                    if (args.PropertyName == nameof(FileItemInfo.IsSelected))
+                        OnFileSelectionChanged();
                 };
                 FileList.Add(fileInfo);
             }
@@ -678,12 +687,14 @@ public partial class MainViewModel : ViewModelBase
         {
             SelectedPath = path;
             FileList.Clear();
+            UpdateSelectedCount();
             StatusMessage = "Android 文档目录不是本地路径，请使用SMB模式或输入可访问的本地路径";
             return;
         }
 
         SelectedPath = path;
         FileList.Clear();
+        UpdateSelectedCount();
 
         try
         {
@@ -709,6 +720,11 @@ public partial class MainViewModel : ViewModelBase
                     Extension = fileInfo.Extension,
                     Size = fileInfo.Length,
                     ModifiedTime = fileInfo.LastWriteTime
+                };
+                fileItem.PropertyChanged += (_, args) =>
+                {
+                    if (args.PropertyName == nameof(FileItemInfo.IsSelected))
+                        OnFileSelectionChanged();
                 };
                 FileList.Add(fileItem);
             }
