@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace remename.ViewModels;
 
@@ -52,6 +53,12 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _replaceText = string.Empty;
+
+    [ObservableProperty]
+    private int _renameMode;
+
+    [ObservableProperty]
+    private string _season = "S01";
 
     [ObservableProperty]
     private ObservableCollection<FileItemInfo> _fileList = new();
@@ -106,6 +113,13 @@ public partial class MainViewModel : ViewModelBase
     public bool HasSelectedPath => !string.IsNullOrEmpty(SelectedPath);
     public bool HasSearchText => !string.IsNullOrEmpty(SearchText);
     public bool HasSelectedFiles => SelectedCount > 0;
+    public bool IsStandardRenameMode => RenameMode == 0;
+    public bool IsAnimePresetMode => RenameMode == 1;
+    public bool CanRename => IsAnimePresetMode
+        ? !string.IsNullOrWhiteSpace(Season)
+        : HasSearchText;
+    public IReadOnlyList<string> RenameModes { get; } =
+        new[] { "普通替换", "模式 1：季度剧集" };
 
     public IFolderPickerService? FolderPickerService { get; set; }
 
@@ -183,6 +197,19 @@ public partial class MainViewModel : ViewModelBase
     partial void OnSearchTextChanged(string value)
     {
         OnPropertyChanged(nameof(HasSearchText));
+        OnPropertyChanged(nameof(CanRename));
+    }
+
+    partial void OnRenameModeChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsStandardRenameMode));
+        OnPropertyChanged(nameof(IsAnimePresetMode));
+        OnPropertyChanged(nameof(CanRename));
+    }
+
+    partial void OnSeasonChanged(string value)
+    {
+        OnPropertyChanged(nameof(CanRename));
     }
 
     private void ApplyFilter()
@@ -435,8 +462,14 @@ public partial class MainViewModel : ViewModelBase
 
     private async Task ExecuteRenameAsync()
     {
-        if (string.IsNullOrEmpty(SelectedPath) || string.IsNullOrEmpty(SearchText))
+        if (string.IsNullOrEmpty(SelectedPath) || !CanRename)
             return;
+
+        if (IsAnimePresetMode && !TryNormalizeSeason(Season, out _))
+        {
+            StatusMessage = "季度格式无效，请输入 02 或 S02";
+            return;
+        }
 
         try
         {
@@ -542,9 +575,9 @@ public partial class MainViewModel : ViewModelBase
         foreach (var fileItem in filesToRename)
         {
             string file = Path.Combine(SelectedPath, fileItem.Name);
-            string newFileName = fileItem.Name.Replace(SearchText, ReplaceText);
+            string? newFileName = BuildNewFileName(fileItem.Name);
 
-            if (newFileName != fileItem.Name)
+            if (!string.IsNullOrEmpty(newFileName) && newFileName != fileItem.Name)
             {
                 string newPath = Path.Combine(SelectedPath, newFileName);
                 try
@@ -577,8 +610,8 @@ public partial class MainViewModel : ViewModelBase
 
             foreach (var fileItem in filesToRename)
             {
-                string newFileName = fileItem.Name.Replace(SearchText, ReplaceText);
-                if (newFileName != fileItem.Name)
+                string? newFileName = BuildNewFileName(fileItem.Name);
+                if (!string.IsNullOrEmpty(newFileName) && newFileName != fileItem.Name)
                 {
                     var filePath = SelectedPath.TrimEnd('/') + "/" + fileItem.Name;
                     await _smbService.RenameFileAsync(filePath, newFileName);
@@ -593,6 +626,47 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"重命名失败: {ex.Message}";
         }
+    }
+
+    private string? BuildNewFileName(string oldName)
+    {
+        if (IsStandardRenameMode)
+            return oldName.Replace(SearchText, ReplaceText);
+
+        if (!TryNormalizeSeason(Season, out var normalizedSeason))
+            return null;
+
+        var nameWithoutGroup = Regex.Replace(oldName, @"^\[.*?\]\s*", string.Empty);
+        var extension = Regex.Match(oldName, @"(\.sc\.ass|\.tc\.ass)$", RegexOptions.IgnoreCase) is { Success: true } composite
+            ? composite.Value
+            : Path.GetExtension(oldName);
+
+        var ovaMatch = Regex.Match(nameWithoutGroup, @"^(.*?)\[OVA\].*", RegexOptions.IgnoreCase);
+        if (ovaMatch.Success)
+            return $"{ovaMatch.Groups[1].Value.Trim()} OVA{extension}";
+
+        var episodeMatch = Regex.Match(nameWithoutGroup, @"^(.*?)\[(\d+)\].*");
+        if (episodeMatch.Success)
+        {
+            var title = episodeMatch.Groups[1].Value.Trim();
+            var episode = episodeMatch.Groups[2].Value;
+            return $"{title} {normalizedSeason}E{episode}{extension}";
+        }
+
+        return null;
+    }
+
+    private static bool TryNormalizeSeason(string input, out string season)
+    {
+        var value = input.Trim().ToUpperInvariant();
+        if (!Regex.IsMatch(value, @"^S?\d+$"))
+        {
+            season = string.Empty;
+            return false;
+        }
+
+        season = value.StartsWith('S') ? value : "S" + value;
+        return true;
     }
 
     public void LoadFilesFromPath(string path)
