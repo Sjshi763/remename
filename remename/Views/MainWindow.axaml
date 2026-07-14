@@ -6,7 +6,7 @@
         xmlns:views="using:remename.Views"
         mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="700"
         x:Class="remename.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/app-icon.ico"
         Title="批量重命名工具"
         Width="950" Height="700"
         MinWidth="800" MinHeight="500"
