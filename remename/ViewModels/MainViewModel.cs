@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using remename.Diagnostics;
 
 namespace remename.ViewModels;
 

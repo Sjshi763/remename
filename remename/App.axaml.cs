@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using remename.Diagnostics;
 using remename.ViewModels;
 using remename.Views;
 using System;

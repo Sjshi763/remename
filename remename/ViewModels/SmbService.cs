@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using FileAttributes = SMBLibrary.FileAttributes;
-using remename.Diagnostics;
+using remename.ViewModels;
 
 namespace remename;
 

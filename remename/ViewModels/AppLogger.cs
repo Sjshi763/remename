@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace remename.Diagnostics;
+namespace remename.ViewModels;
 
 public static class AppLogger
 {
@@ -25,13 +25,14 @@ public static class AppLogger
 
             try
             {
-                var logDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "remename",
-                    "logs");
+                var logDirectory = System.IO.Path.Combine(
+                    AppPath.GetApplicationDataDirectory(),
+                    "log");
                 Directory.CreateDirectory(logDirectory);
 
-                LogFilePath = Path.Combine(logDirectory, $"remename-{DateTime.UtcNow:yyyyMMdd}.log");
+                LogFilePath = System.IO.Path.Combine(
+                    logDirectory,
+                    $"remename-{DateTime.UtcNow:yyyyMMdd}.log");
                 Source.Listeners.Add(new TextWriterTraceListener(LogFilePath));
             }
             catch (Exception ex)
