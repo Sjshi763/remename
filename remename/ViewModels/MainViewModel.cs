@@ -33,6 +33,12 @@ public class FileItemInfo
     }
 }
 
+public sealed class SmbFolderItem
+{
+    public required string Name { get; init; }
+    public required IAsyncRelayCommand OpenCommand { get; init; }
+}
+
 public partial class MainViewModel : ViewModelBase
 {
     private ISmbService? _smbService;
@@ -67,6 +73,12 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool _isSmbConnected = false;
+
+    [ObservableProperty]
+    private string _smbBrowsePath = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<SmbFolderItem> _smbFolders = new();
 
     [ObservableProperty]
     private string _statusMessage = string.Empty;
@@ -110,6 +122,14 @@ public partial class MainViewModel : ViewModelBase
     private AsyncRelayCommand? _disconnectSmbCommand;
     public IAsyncRelayCommand DisconnectSmbCommand =>
         _disconnectSmbCommand ??= new AsyncRelayCommand(ExecuteDisconnectSmbAsync);
+
+    private AsyncRelayCommand? _navigateSmbUpCommand;
+    public IAsyncRelayCommand NavigateSmbUpCommand =>
+        _navigateSmbUpCommand ??= new AsyncRelayCommand(ExecuteNavigateSmbUpAsync);
+
+    private AsyncRelayCommand? _useCurrentSmbFolderCommand;
+    public IAsyncRelayCommand UseCurrentSmbFolderCommand =>
+        _useCurrentSmbFolderCommand ??= new AsyncRelayCommand(ExecuteUseCurrentSmbFolderAsync);
 
     private AsyncRelayCommand? _refreshCommand;
     public IAsyncRelayCommand RefreshCommand =>
@@ -276,7 +296,7 @@ public partial class MainViewModel : ViewModelBase
             StatusMessage = "已连接到SMB服务器";
 
             var initialPath = BuildInitialSmbPath();
-            await LoadSmbFilesAsync(initialPath);
+            await BrowseSmbFolderAsync(initialPath);
         }
         catch (Exception ex)
         {
@@ -296,6 +316,8 @@ public partial class MainViewModel : ViewModelBase
             IsSmbConnected = false;
             IsSmbMode = false;
             SelectedPath = string.Empty;
+            SmbBrowsePath = string.Empty;
+            SmbFolders.Clear();
             FileList.Clear();
             StatusMessage = "已断开连接";
         }
@@ -303,6 +325,65 @@ public partial class MainViewModel : ViewModelBase
         {
             StatusMessage = $"断开连接失败: {ex.Message}";
         }
+    }
+
+    private async Task BrowseSmbFolderAsync(string path)
+    {
+        if (_smbService == null || !IsSmbConnected)
+            return;
+
+        try
+        {
+            var normalizedPath = NormalizeSmbPath(path);
+            var folders = await _smbService.GetFoldersAsync(normalizedPath);
+
+            SmbBrowsePath = normalizedPath;
+            SmbFolders.Clear();
+            foreach (var folder in folders.OrderBy(name => name, StringComparer.OrdinalIgnoreCase))
+            {
+                var folderPath = normalizedPath.TrimEnd('/') + "/" + folder + "/";
+                SmbFolders.Add(new SmbFolderItem
+                {
+                    Name = folder,
+                    OpenCommand = new AsyncRelayCommand(() => BrowseSmbFolderAsync(folderPath))
+                });
+            }
+
+            StatusMessage = folders.Count == 0 ? "当前目录没有子文件夹" : $"找到 {folders.Count} 个文件夹";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"加载文件夹失败: {ex.Message}";
+        }
+    }
+
+    private Task ExecuteNavigateSmbUpAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SmbBrowsePath))
+            return Task.CompletedTask;
+
+        var segments = SmbBrowsePath[6..].Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length <= 1)
+            return Task.CompletedTask;
+
+        var parentPath = "smb://" + string.Join('/', segments.Take(segments.Length - 1)) + "/";
+        return BrowseSmbFolderAsync(parentPath);
+    }
+
+    private async Task ExecuteUseCurrentSmbFolderAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SmbBrowsePath))
+            return;
+
+        // The server root contains shares, not files, and cannot be a work folder.
+        var segments = SmbBrowsePath[6..].Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            StatusMessage = "请先进入一个共享文件夹";
+            return;
+        }
+
+        await LoadSmbFilesAsync(SmbBrowsePath);
     }
 
     private async Task LoadSmbFilesAsync(string path)
@@ -557,4 +638,3 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 }
-

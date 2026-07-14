@@ -173,6 +173,38 @@
           </StackPanel>
         </Border>
 
+        <!-- SMB folder browser -->
+        <Border Classes="mobile-card" IsVisible="{Binding IsSmbConnected}">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="section-title-mobile" Text="选择工作文件夹" />
+            <TextBlock Classes="muted-mobile" Text="{Binding SmbBrowsePath}"
+                       TextWrapping="Wrap" />
+
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+              <Button Classes="mobile-button mobile-secondary" Content="返回上级"
+                      Command="{Binding NavigateSmbUpCommand}" MinHeight="44" />
+              <Button Grid.Column="1" Classes="mobile-button mobile-primary"
+                      Content="使用当前文件夹" Command="{Binding UseCurrentSmbFolderCommand}"
+                      MinHeight="44" HorizontalAlignment="Stretch" />
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding SmbFolders}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:SmbFolderItem">
+                  <Button Classes="mobile-button mobile-secondary" Command="{Binding OpenCommand}"
+                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                          Margin="0,0,0,8" MinHeight="48">
+                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="muted-mobile" Text="当前目录没有子文件夹"
+                       IsVisible="{Binding !SmbFolders.Count}" />
+          </StackPanel>
+        </Border>
+
         <!-- 目标文件夹 - 移动端简化 -->
         <Border Classes="mobile-card">
           <StackPanel Spacing="16">
