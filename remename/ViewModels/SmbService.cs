@@ -11,12 +11,14 @@ using remename.ViewModels;
 
 namespace remename;
 
+public sealed record SmbFileEntry(string Name, long Size, DateTime ModifiedTime);
+
 public interface ISmbService
 {
     Task ConnectAsync(string server, string username, string password);
     Task DisconnectAsync();
     Task<List<string>> GetFoldersAsync(string path);
-    Task<List<string>> GetFilesAsync(string path);
+    Task<List<SmbFileEntry>> GetFilesAsync(string path);
     Task<bool> IsConnectedAsync();
     Task RenameFileAsync(string filePath, string newFileName);
 }
@@ -106,7 +108,7 @@ public class SmbService : ISmbService
         });
     }
 
-    public Task<List<string>> GetFilesAsync(string path)
+    public Task<List<SmbFileEntry>> GetFilesAsync(string path)
     {
         return Task.Run(() =>
         {
@@ -118,12 +120,12 @@ public class SmbService : ISmbService
 
                 if (string.IsNullOrEmpty(smbPath.ShareName))
                 {
-                    return new List<string>();
+                    return new List<SmbFileEntry>();
                 }
 
                 return ListDirectory(smbPath)
                     .Where(entry => !entry.IsDirectory)
-                    .Select(entry => entry.Name)
+                    .Select(entry => new SmbFileEntry(entry.Name, entry.Size, entry.ModifiedTime))
                     .ToList();
             }
             catch (Exception ex)
@@ -290,7 +292,9 @@ public class SmbService : ISmbService
                     .Where(entry => entry.FileName is not "." and not "..")
                     .Select(entry => new SmbDirectoryEntry(
                         entry.FileName,
-                        entry.FileAttributes.HasFlag(FileAttributes.Directory)))
+                        entry.FileAttributes.HasFlag(FileAttributes.Directory),
+                        entry.EndOfFile,
+                        entry.LastWriteTime))
                     .ToList();
             }
             finally
@@ -422,5 +426,9 @@ public class SmbService : ISmbService
 
     private sealed record SmbPath(string ShareName, string RelativePath);
 
-    private sealed record SmbDirectoryEntry(string Name, bool IsDirectory);
+    private sealed record SmbDirectoryEntry(
+        string Name,
+        bool IsDirectory,
+        long Size,
+        DateTime ModifiedTime);
 }

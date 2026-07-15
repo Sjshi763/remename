@@ -594,16 +594,16 @@ public partial class MainViewModel : ViewModelBase
             // 应用过滤
             var filteredFiles = string.IsNullOrEmpty(FilterText)
                 ? files
-                : files.Where(f => f.Contains(FilterText, StringComparison.OrdinalIgnoreCase)).ToList();
+                : files.Where(f => f.Name.Contains(FilterText, StringComparison.OrdinalIgnoreCase)).ToList();
 
             foreach (var file in filteredFiles)
             {
                 var fileInfo = new FileItemInfo
                 {
-                    Name = file,
-                    Extension = Path.GetExtension(file),
-                    Size = 0, // SMB暂时不获取大小
-                    ModifiedTime = DateTime.Now
+                    Name = file.Name,
+                    Extension = Path.GetExtension(file.Name),
+                    Size = file.Size,
+                    ModifiedTime = file.ModifiedTime
                 };
                 fileInfo.PropertyChanged += (_, args) =>
                 {
