@@ -66,6 +66,14 @@
       <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
       <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
     </Style>
+    <Style Selector="NumericUpDown.desktop-input">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="11,7" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+    </Style>
     <Style Selector="Button.command">
       <Setter Property="MinHeight" Value="38" />
       <Setter Property="Padding" Value="14,7" />
@@ -200,13 +208,35 @@
                   <TabItem Header="普通替换">
                     <StackPanel Margin="0,14,0,0" Spacing="12">
                       <StackPanel>
-                        <TextBlock Classes="field-label" Text="搜索内容" />
+                        <TextBlock Classes="field-label" Text="定位方式" />
+                        <ComboBox MinHeight="38"
+                                  ItemsSource="{Binding LocatorModes}"
+                                  SelectedIndex="{Binding LocatorMode}"
+                                  ToolTip.Tip="{Binding LocatorHint}"
+                                  HorizontalAlignment="Stretch" />
+                      </StackPanel>
+                      <StackPanel IsVisible="{Binding LocatorUsesText}">
+                        <TextBlock Classes="field-label" Text="定位字符串 XX" />
                         <TextBox Classes="desktop-input"
                                  Text="{Binding SearchText}"
-                                 PlaceholderText="要替换的文字" />
+                                 PlaceholderText="{Binding LocatorTextPlaceholder}" />
+                      </StackPanel>
+                      <StackPanel IsVisible="{Binding LocatorUsesPosition}">
+                        <TextBlock Classes="field-label" Text="{Binding LocatorPositionLabel}" />
+                        <NumericUpDown Classes="desktop-input"
+                                       Value="{Binding LocatorPosition}"
+                                       Minimum="1" Maximum="2147483647"
+                                       Increment="1" FormatString="0" />
+                      </StackPanel>
+                      <StackPanel IsVisible="{Binding LocatorUsesCount}">
+                        <TextBlock Classes="field-label" Text="字符数 N" />
+                        <NumericUpDown Classes="desktop-input"
+                                       Value="{Binding LocatorCount}"
+                                       Minimum="1" Maximum="2147483647"
+                                       Increment="1" FormatString="0" />
                       </StackPanel>
                       <StackPanel>
-                        <TextBlock Classes="field-label" Text="替换为" />
+                        <TextBlock Classes="field-label" Text="新字符串" />
                         <TextBox Classes="desktop-input"
                                  Text="{Binding ReplaceText}"
                                  PlaceholderText="留空表示删除" />

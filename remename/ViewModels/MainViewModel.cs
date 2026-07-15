@@ -76,6 +76,15 @@ public partial class MainViewModel : ViewModelBase
     private string _replaceText = string.Empty;
 
     [ObservableProperty]
+    private int _locatorMode;
+
+    [ObservableProperty]
+    private decimal _locatorPosition = 1;
+
+    [ObservableProperty]
+    private decimal _locatorCount = 1;
+
+    [ObservableProperty]
     private int _renameMode;
 
     [ObservableProperty]
@@ -147,11 +156,50 @@ public partial class MainViewModel : ViewModelBase
     public bool HasSelectedFiles => SelectedCount > 0;
     public bool IsStandardRenameMode => RenameMode == 0;
     public bool IsAnimePresetMode => RenameMode == 1;
+    public bool LocatorUsesText => LocatorMode is 0 or 5 or 6 or 7;
+    public bool LocatorUsesPosition => LocatorMode is 3 or 4;
+    public bool LocatorUsesCount => LocatorMode is 1 or 2 or 3 or 4 or 7;
+    public string LocatorPositionLabel => LocatorMode == 4 ? "倒数位置 M" : "位置 M";
+    public string LocatorTextPlaceholder => LocatorMode switch
+    {
+        5 => "从该字符串之后开始定位",
+        6 => "定位该字符串之前的内容",
+        7 => "从该字符串之后定位 N 个字符",
+        _ => "要删除或替换的字符串"
+    };
+    public string LocatorHint => LocatorMode switch
+    {
+        0 => "替换主文件名中的所有匹配字符串",
+        1 => "从主文件名开头定位 N 个字符",
+        2 => "从主文件名末尾定位 N 个字符",
+        3 => "从第 M 个字符之后定位 N 个字符",
+        4 => "从倒数第 M 个字符之前向前定位 N 个字符",
+        5 => "定位首次匹配字符串后面的全部内容",
+        6 => "定位首次匹配字符串前面的全部内容",
+        7 => "定位首次匹配字符串后紧跟的 N 个字符",
+        _ => string.Empty
+    };
+    public bool HasValidLocatorRule =>
+        (!LocatorUsesText || !string.IsNullOrEmpty(SearchText)) &&
+        (!LocatorUsesPosition || IsPositiveInteger(LocatorPosition)) &&
+        (!LocatorUsesCount || IsPositiveInteger(LocatorCount));
     public bool CanRename => HasSelectedFiles && (IsAnimePresetMode
         ? !string.IsNullOrWhiteSpace(Season)
-        : HasSearchText);
+        : HasValidLocatorRule);
     public IReadOnlyList<string> RenameModes { get; } =
         new[] { "普通替换", "模式 1：季度剧集" };
+    public IReadOnlyList<string> LocatorModes { get; } =
+        new[]
+        {
+            "指定字符串 XX",
+            "前 N 个字符",
+            "后 N 个字符",
+            "第 M 位置后的 N 个字符",
+            "倒数 M 位置前的 N 个字符",
+            "XX 字符串后面的所有字符",
+            "XX 字符串前面的所有字符",
+            "XX 字符串后面的 N 个字符"
+        };
     public IReadOnlyList<string> SortModes { get; } =
         new[] { "名称排序", "大小排序", "类型排序", "时间排序" };
 
@@ -358,12 +406,40 @@ public partial class MainViewModel : ViewModelBase
     partial void OnSearchTextChanged(string value)
     {
         OnPropertyChanged(nameof(HasSearchText));
+        OnPropertyChanged(nameof(HasValidLocatorRule));
         OnPropertyChanged(nameof(CanRename));
         UpdateRenamePreviews();
     }
 
     partial void OnReplaceTextChanged(string value)
     {
+        UpdateRenamePreviews();
+    }
+
+    partial void OnLocatorModeChanged(int value)
+    {
+        OnPropertyChanged(nameof(LocatorUsesText));
+        OnPropertyChanged(nameof(LocatorUsesPosition));
+        OnPropertyChanged(nameof(LocatorUsesCount));
+        OnPropertyChanged(nameof(LocatorPositionLabel));
+        OnPropertyChanged(nameof(LocatorTextPlaceholder));
+        OnPropertyChanged(nameof(LocatorHint));
+        OnPropertyChanged(nameof(HasValidLocatorRule));
+        OnPropertyChanged(nameof(CanRename));
+        UpdateRenamePreviews();
+    }
+
+    partial void OnLocatorPositionChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(HasValidLocatorRule));
+        OnPropertyChanged(nameof(CanRename));
+        UpdateRenamePreviews();
+    }
+
+    partial void OnLocatorCountChanged(decimal value)
+    {
+        OnPropertyChanged(nameof(HasValidLocatorRule));
+        OnPropertyChanged(nameof(CanRename));
         UpdateRenamePreviews();
     }
 
@@ -385,7 +461,7 @@ public partial class MainViewModel : ViewModelBase
     {
         var canPreview = IsAnimePresetMode
             ? TryNormalizeSeason(Season, out _)
-            : !string.IsNullOrEmpty(SearchText);
+            : HasValidLocatorRule;
 
         foreach (var file in FileList)
         {
@@ -836,7 +912,18 @@ public partial class MainViewModel : ViewModelBase
     private string? BuildNewFileName(string oldName)
     {
         if (IsStandardRenameMode)
-            return oldName.Replace(SearchText, ReplaceText);
+        {
+            if (!HasValidLocatorRule)
+                return null;
+
+            return FileNameLocator.Apply(
+                oldName,
+                (FileNameLocatorMode)LocatorMode,
+                SearchText,
+                ReplaceText,
+                (int)LocatorPosition,
+                (int)LocatorCount);
+        }
 
         if (!TryNormalizeSeason(Season, out var normalizedSeason))
             return null;
@@ -873,6 +960,9 @@ public partial class MainViewModel : ViewModelBase
         season = value.StartsWith('S') ? value : "S" + value;
         return true;
     }
+
+    private static bool IsPositiveInteger(decimal value) =>
+        value >= 1 && value <= int.MaxValue && decimal.Truncate(value) == value;
 
     public void LoadFilesFromPath(string path)
     {

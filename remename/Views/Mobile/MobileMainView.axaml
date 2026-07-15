@@ -58,6 +58,14 @@
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="BorderBrush" Value="#E2E8F0" />
     </Style>
+    <Style Selector="NumericUpDown.mobile-input">
+      <Setter Property="MinHeight" Value="48" />
+      <Setter Property="Padding" Value="16,12" />
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#E2E8F0" />
+    </Style>
 
     <!-- 移动端按钮 - 大尺寸便于触控 -->
     <Style Selector="Button.mobile-button">
@@ -332,15 +340,43 @@
                       MinHeight="48" HorizontalAlignment="Stretch" />
 
             <StackPanel IsVisible="{Binding IsStandardRenameMode}">
-              <TextBlock Classes="field-label-mobile" Text="搜索内容" />
-              <TextBox Classes="mobile-input" Text="{Binding SearchText}"
-                       PlaceholderText="要替换的文字" />
-            </StackPanel>
+              <StackPanel Spacing="16">
+                <StackPanel>
+                  <TextBlock Classes="field-label-mobile" Text="定位方式" />
+                  <ComboBox ItemsSource="{Binding LocatorModes}"
+                            SelectedIndex="{Binding LocatorMode}"
+                            ToolTip.Tip="{Binding LocatorHint}"
+                            MinHeight="48" HorizontalAlignment="Stretch" />
+                </StackPanel>
 
-            <StackPanel IsVisible="{Binding IsStandardRenameMode}">
-              <TextBlock Classes="field-label-mobile" Text="替换为" />
-              <TextBox Classes="mobile-input" Text="{Binding ReplaceText}"
-                       PlaceholderText="新的文字（可为空）" />
+                <StackPanel IsVisible="{Binding LocatorUsesText}">
+                  <TextBlock Classes="field-label-mobile" Text="定位字符串 XX" />
+                  <TextBox Classes="mobile-input" Text="{Binding SearchText}"
+                           PlaceholderText="{Binding LocatorTextPlaceholder}" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding LocatorUsesPosition}">
+                  <TextBlock Classes="field-label-mobile" Text="{Binding LocatorPositionLabel}" />
+                  <NumericUpDown Classes="mobile-input"
+                                 Value="{Binding LocatorPosition}"
+                                 Minimum="1" Maximum="2147483647"
+                                 Increment="1" FormatString="0" />
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding LocatorUsesCount}">
+                  <TextBlock Classes="field-label-mobile" Text="字符数 N" />
+                  <NumericUpDown Classes="mobile-input"
+                                 Value="{Binding LocatorCount}"
+                                 Minimum="1" Maximum="2147483647"
+                                 Increment="1" FormatString="0" />
+                </StackPanel>
+
+                <StackPanel>
+                  <TextBlock Classes="field-label-mobile" Text="新字符串" />
+                  <TextBox Classes="mobile-input" Text="{Binding ReplaceText}"
+                           PlaceholderText="留空表示删除" />
+                </StackPanel>
+              </StackPanel>
             </StackPanel>
 
             <StackPanel IsVisible="{Binding IsAnimePresetMode}">
