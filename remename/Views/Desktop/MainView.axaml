@@ -3,9 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:remename.ViewModels"
-             xmlns:input="using:Avalonia.Input.TextInput"
-             xmlns:helpers="using:remename.Helpers"
-             mc:Ignorable="d" d:DesignWidth="950" d:DesignHeight="700"
+             mc:Ignorable="d"
+             d:DesignWidth="1180"
+             d:DesignHeight="760"
              x:Class="remename.Views.MainView"
              x:DataType="vm:MainViewModel">
 
@@ -13,327 +13,341 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
+  <UserControl.Resources>
+    <SolidColorBrush x:Key="CanvasBrush" Color="#F5F7F8" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="BorderBrush" Color="#DDE3E7" />
+    <SolidColorBrush x:Key="TextBrush" Color="#17212B" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#66747F" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#1769E0" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#0F5AC5" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#EAF2FF" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#16805A" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E8F7F0" />
+  </UserControl.Resources>
+
   <UserControl.Styles>
-    <!-- 基础样式 -->
-    <Style Selector="TextBlock.title">
-      <Setter Property="FontSize" Value="24" />
+    <Style Selector="TextBlock">
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <Style Selector="TextBlock.page-title">
+      <Setter Property="FontSize" Value="20" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,8" />
     </Style>
     <Style Selector="TextBlock.section-title">
-      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontSize" Value="14" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Margin" Value="0,0,0,12" />
     </Style>
     <Style Selector="TextBlock.field-label">
-      <Setter Property="FontWeight" Value="Medium" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
       <Setter Property="Margin" Value="0,0,0,6" />
     </Style>
     <Style Selector="TextBlock.muted">
-      <Setter Property="Foreground" Value="#64748B" />
-      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
     </Style>
     <Style Selector="TextBlock.file-name">
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="13" />
       <Setter Property="FontWeight" Value="Medium" />
-      <Setter Property="TextWrapping" Value="NoWrap" />
       <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
-    <Style Selector="TextBlock.file-info">
+    <Style Selector="TextBlock.preview-name">
       <Setter Property="FontSize" Value="12" />
-      <Setter Property="Foreground" Value="#64748B" />
+      <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
-
-    <!-- 输入框样式 -->
-    <Style Selector="TextBox">
-      <Setter Property="MinHeight" Value="36" />
-      <Setter Property="Padding" Value="12,8" />
-      <Setter Property="FontSize" Value="14" />
+    <Style Selector="TextBox.desktop-input">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="11,7" />
+      <Setter Property="FontSize" Value="13" />
       <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
     </Style>
-    <Style Selector="TextBox.pc-mode">
-      <Setter Property="MinHeight" Value="36" />
-    </Style>
-    <Style Selector="TextBox.mobile-mode">
-      <Setter Property="MinHeight" Value="48" />
-      <Setter Property="FontSize" Value="16" />
-    </Style>
-
-    <!-- 按钮样式 -->
-    <Style Selector="Button">
-      <Setter Property="MinHeight" Value="36" />
-      <Setter Property="Padding" Value="16,8" />
+    <Style Selector="Button.command">
+      <Setter Property="MinHeight" Value="38" />
+      <Setter Property="Padding" Value="14,7" />
       <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Medium" />
     </Style>
     <Style Selector="Button.primary">
-      <Setter Property="Background" Value="#2563EB" />
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
       <Setter Property="Foreground" Value="White" />
       <Setter Property="BorderThickness" Value="0" />
     </Style>
+    <Style Selector="Button.primary:pointerover">
+      <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
+    </Style>
     <Style Selector="Button.secondary">
-      <Setter Property="Background" Value="#F1F5F9" />
-      <Setter Property="Foreground" Value="#334155" />
-      <Setter Property="BorderBrush" Value="#E2E8F0" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
     </Style>
-    <Style Selector="Button.mobile-action">
-      <Setter Property="MinHeight" Value="52" />
-      <Setter Property="FontSize" Value="16" />
-      <Setter Property="FontWeight" Value="SemiBold" />
+    <Style Selector="Button.secondary:pointerover">
+      <Setter Property="Background" Value="#F0F3F5" />
     </Style>
-    <Style Selector="Button.icon-button">
-      <Setter Property="MinHeight" Value="32" />
-      <Setter Property="MinWidth" Value="32" />
-      <Setter Property="Padding" Value="6" />
+    <Style Selector="Border.sidebar-section">
+      <Setter Property="Padding" Value="20" />
+      <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="TabControl.rename-tabs">
+      <Setter Property="Padding" Value="0" />
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
     </Style>
-
-    <!-- 分隔线样式 -->
-    <Style Selector="Border.section">
-      <Setter Property="BorderBrush" Value="#E2E8F0" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Padding" Value="16" />
-      <Setter Property="Background" Value="#FAFAFA" />
-    </Style>
-    <Style Selector="Border.divider">
-      <Setter Property="BorderBrush" Value="#E2E8F0" />
-      <Setter Property="BorderThickness" Value="0,1,0,0" />
-      <Setter Property="Margin" Value="0,16,0,0" />
-    </Style>
-
-    <!-- ListBox样式 -->
-    <Style Selector="ListBox">
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="BorderBrush" Value="#E2E8F0" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="Background" Value="White" />
-      <Setter Property="Padding" Value="4" />
-    </Style>
-    <Style Selector="ListBoxItem">
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Padding" Value="12,8" />
-      <Setter Property="MinHeight" Value="44" />
-      <Setter Property="CornerRadius" Value="6" />
     </Style>
-    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#F1F5F9" />
+    <Style Selector="ListBox.file-list">
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Padding" Value="0" />
     </Style>
-    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
-      <Setter Property="Background" Value="#DBEAFE" />
+    <Style Selector="ListBox.file-list ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="54" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="ListBox.file-list ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.file-list ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#F6F8F9" />
     </Style>
   </UserControl.Styles>
 
-  <!-- PC端布局：双栏结构 -->
-  <Grid x:Name="LayoutRoot" RowDefinitions="Auto,*">
-    <!-- 头部标题栏 -->
-    <Border Grid.Row="0" Background="#F8FAFC" Padding="24,16" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-      <StackPanel Spacing="6" MaxWidth="1200" HorizontalAlignment="Stretch">
-        <TextBlock Classes="title" Text="批量重命名工具" />
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <TextBlock Classes="muted" Text="{Binding StatusMessage}" TextWrapping="Wrap" />
-          <TextBlock Classes="muted" Text="|" IsVisible="{Binding HasStatusMessage}" />
-          <TextBlock Classes="muted" Text="{Binding FileList.Count}" Foreground="#2563EB" FontWeight="SemiBold" />
-          <TextBlock Classes="muted" Text="个文件" />
-          <TextBlock Classes="muted" Text="|" IsVisible="{Binding HasSelectedFiles}" />
-          <TextBlock Classes="muted" Text="{Binding SelectedCount}" Foreground="#16A34A" FontWeight="SemiBold"
-                     IsVisible="{Binding HasSelectedFiles}" />
-          <TextBlock Classes="muted" Text="个已选中" IsVisible="{Binding HasSelectedFiles}" />
+  <Grid x:Name="LayoutRoot"
+        RowDefinitions="68,*,62"
+        Background="{StaticResource CanvasBrush}">
+
+    <Border Grid.Row="0"
+            Padding="22,0"
+            Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+        <Image Width="34" Height="34" Source="/Assets/app-icon.png"
+               VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+          <TextBlock Classes="page-title" Text="批量重命名" />
+          <TextBlock Classes="muted" Text="{Binding SelectedPath}"
+                     TextTrimming="CharacterEllipsis"
+                     IsVisible="{Binding HasSelectedPath}" />
         </StackPanel>
-      </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal"
+                    VerticalAlignment="Center" Spacing="8">
+          <Border Padding="10,6" CornerRadius="6" Background="{StaticResource AccentSoftBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="{Binding FileList.Count}" Foreground="{StaticResource AccentBrush}"
+                         FontWeight="SemiBold" FontSize="12" />
+              <TextBlock Text="个文件" Foreground="{StaticResource AccentBrush}" FontSize="12" />
+            </StackPanel>
+          </Border>
+          <Border Padding="10,6" CornerRadius="6" Background="{StaticResource SuccessSoftBrush}"
+                  IsVisible="{Binding HasSelectedFiles}">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="{Binding SelectedCount}" Foreground="{StaticResource SuccessBrush}"
+                         FontWeight="SemiBold" FontSize="12" />
+              <TextBlock Text="个已选" Foreground="{StaticResource SuccessBrush}" FontSize="12" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
     </Border>
 
-    <!-- 主内容区域 - PC端双栏布局 -->
-    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-      <Grid MaxWidth="1200" Margin="24,20" ColumnDefinitions="380,*" ColumnSpacing="20">
-
-        <!-- 左栏：连接和设置 -->
-        <StackPanel Spacing="16">
-
-          <!-- SMB连接区域 -->
-          <Border Classes="section" IsVisible="{Binding IsSmbOptionAvailable}">
-            <StackPanel Spacing="12">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <TextBlock Classes="section-title" Text="SMB网络连接" />
-                <Border Grid.Column="1" CornerRadius="4" Padding="8,4" VerticalAlignment="Center"
-                        IsVisible="{Binding IsSmbConnected}">
-                  <Border.Background>
-                    <SolidColorBrush Color="#DCFCE7" />
-                  </Border.Background>
-                  <TextBlock Text="已连接" Foreground="#15803D" FontWeight="SemiBold" FontSize="12" />
-                </Border>
-              </Grid>
-
-              <CheckBox IsChecked="{Binding IsSmbMode}" Content="启用SMB模式"
-                        FontWeight="Medium" />
-
-              <StackPanel Spacing="10" IsVisible="{Binding IsSmbMode}">
-                <StackPanel>
-                  <TextBlock Classes="field-label" Text="服务器地址" />
-                  <TextBox Text="{Binding SmbServer}" PlaceholderText="192.168.1.100 或 server/share" />
-                </StackPanel>
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                  <StackPanel>
-                    <TextBlock Classes="field-label" Text="用户名" />
-                    <TextBox Text="{Binding SmbUsername}" PlaceholderText="可选" />
-                  </StackPanel>
-                  <StackPanel Grid.Column="1">
-                    <TextBlock Classes="field-label" Text="密码" />
-                    <TextBox Text="{Binding SmbPassword}" PasswordChar="*" PlaceholderText="可选"
-                             input:TextInputOptions.ContentType="Password"
-                             input:TextInputOptions.IsSensitive="True"
-                             input:TextInputOptions.ShowSuggestions="False" />
-                  </StackPanel>
-                </Grid>
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                  <Button Content="连接" Command="{Binding ConnectSmbCommand}" Classes="primary"
+    <Grid Grid.Row="1" ColumnDefinitions="340,*">
+      <Border Grid.Column="0"
+              Background="{StaticResource SurfaceBrush}"
+              BorderBrush="{StaticResource BorderBrush}"
+              BorderThickness="0,0,1,0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+          <StackPanel>
+            <Border Classes="sidebar-section">
+              <StackPanel Spacing="12">
+                <TextBlock Classes="section-title" Text="目标文件夹" />
+                <TextBox Classes="desktop-input"
+                         Text="{Binding SelectedPath}"
+                         PlaceholderText="选择或输入文件夹路径"
+                         AcceptsReturn="False" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <Button Classes="command primary"
+                          Content="浏览文件夹"
+                          Command="{Binding SelectFolderCommand}"
                           HorizontalAlignment="Stretch" />
-                  <Button Grid.Column="1" Content="断开" Command="{Binding DisconnectSmbCommand}"
-                          Classes="secondary" HorizontalAlignment="Stretch"
-                          IsEnabled="{Binding IsSmbConnected}" />
+                  <Button Grid.Column="1"
+                          Classes="command secondary"
+                          Content="刷新"
+                          Command="{Binding RefreshCommand}"
+                          IsEnabled="{Binding HasSelectedPath}"
+                          HorizontalAlignment="Stretch" />
                 </Grid>
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
-                      IsVisible="{Binding HasSmbCredentialStore}">
-                  <Button Content="保存凭证" Command="{Binding SaveSmbCredentialCommand}"
-                          Classes="secondary" HorizontalAlignment="Stretch" />
-                  <Button Grid.Column="1" Content="已保存凭证"
-                          Command="{Binding ToggleSmbCredentialListCommand}"
-                          Classes="secondary" HorizontalAlignment="Stretch" />
-                </Grid>
-
-                <StackPanel Spacing="6" IsVisible="{Binding IsSmbCredentialListOpen}">
-                  <TextBlock Text="没有已保存的凭证" Classes="muted"
-                             IsVisible="{Binding !SavedSmbCredentials.Count}" />
-                  <ItemsControl ItemsSource="{Binding SavedSmbCredentials}">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate DataType="vm:SmbCredentialListItem">
-                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,3">
-                          <StackPanel>
-                            <TextBlock Text="{Binding Server}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding Username}" Classes="muted" TextWrapping="Wrap" />
-                          </StackPanel>
-                          <Button Grid.Column="1" Content="使用" Command="{Binding UseCommand}"
-                                  Classes="secondary" />
-                          <Button Grid.Column="2" Content="删除" Command="{Binding DeleteCommand}"
-                                  Classes="secondary" />
-                        </Grid>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
               </StackPanel>
-            </StackPanel>
-          </Border>
-
-          <!-- 目标路径 -->
-          <Border Classes="section">
-            <StackPanel Spacing="12">
-              <TextBlock Classes="section-title" Text="目标文件夹" />
-              <TextBox Text="{Binding SelectedPath}" PlaceholderText="选择或输入文件夹路径"
-                       AcceptsReturn="False" />
-              <Button Content="浏览文件夹..." Command="{Binding SelectFolderCommand}"
-                      Classes="secondary" HorizontalAlignment="Stretch"
-                      IsVisible="{Binding !IsSmbMode}" />
-              <Button Content="刷新列表" Command="{Binding RefreshCommand}"
-                      Classes="secondary" HorizontalAlignment="Stretch"
-                      IsEnabled="{Binding HasSelectedPath}" />
-            </StackPanel>
-          </Border>
-
-          <!-- 重命名规则 -->
-          <Border Classes="section">
-            <StackPanel Spacing="12">
-              <TextBlock Classes="section-title" Text="重命名规则" />
-              <ComboBox ItemsSource="{Binding RenameModes}"
-                        SelectedIndex="{Binding RenameMode}"
-                        HorizontalAlignment="Stretch" />
-              <StackPanel IsVisible="{Binding IsStandardRenameMode}">
-                <TextBlock Classes="field-label" Text="搜索内容" />
-                <TextBox Text="{Binding SearchText}" PlaceholderText="要替换的文字" />
-              </StackPanel>
-              <StackPanel IsVisible="{Binding IsStandardRenameMode}">
-                <TextBlock Classes="field-label" Text="替换为" />
-                <TextBox Text="{Binding ReplaceText}" PlaceholderText="新的文字（可为空）" />
-              </StackPanel>
-              <StackPanel IsVisible="{Binding IsAnimePresetMode}">
-                <TextBlock Classes="field-label" Text="季度" />
-                <TextBox Text="{Binding Season}" PlaceholderText="例如 02 或 S02" />
-              </StackPanel>
-              <Button Content="执行重命名" Command="{Binding RenameCommand}" Classes="primary"
-                      HorizontalAlignment="Stretch" MinHeight="44"
-                      IsEnabled="{Binding CanRename}" />
-            </StackPanel>
-          </Border>
-        </StackPanel>
-
-        <!-- 右栏：文件列表和详情 -->
-        <Border Classes="section">
-          <Grid RowDefinitions="Auto,*" ColumnDefinitions="*">
-
-            <!-- 文件列表工具栏 -->
-            <Border Grid.Row="0" Padding="0,0,0,12" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-              <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-
-                <!-- 全选复选框 -->
-                <CheckBox Grid.Column="0" IsChecked="{Binding SelectAll}" Content="全选"
-                          FontWeight="Medium" />
-
-                <!-- 过滤输入 -->
-                <TextBox Grid.Column="1" Text="{Binding FilterText}" PlaceholderText="搜索过滤文件..."
-                         HorizontalAlignment="Stretch" />
-
-                <!-- 统计信息 -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-                  <TextBlock Classes="file-info" Text="{Binding FileList.Count}" FontWeight="SemiBold" />
-                  <TextBlock Classes="file-info" Text="项" />
-                </StackPanel>
-              </Grid>
             </Border>
 
-            <!-- 文件列表 - 使用ListBox替代DataGrid -->
-            <ListBox Grid.Row="1" ItemsSource="{Binding FileList}" MinHeight="400"
-                     MaxHeight="500">
-              <ListBox.ItemTemplate>
-                <DataTemplate DataType="vm:FileItemInfo">
-                  <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="12,10">
-                    <Grid ColumnDefinitions="Auto,*,100,100,120" ColumnSpacing="12">
-                      <!-- 选择复选框 -->
-                      <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}"
-                                VerticalAlignment="Center" />
-
-                      <!-- 文件名 -->
-                      <StackPanel Grid.Column="1" Spacing="2">
-                        <TextBlock Classes="file-name" Text="{Binding Name}" />
-                        <TextBlock Classes="file-info" Text="{Binding Extension}" />
+            <Border Classes="sidebar-section" BorderThickness="0">
+              <StackPanel Spacing="12">
+                <TextBlock Classes="section-title" Text="重命名规则" />
+                <TabControl Classes="rename-tabs"
+                            SelectedIndex="{Binding RenameMode}">
+                  <TabItem Header="普通替换">
+                    <StackPanel Margin="0,14,0,0" Spacing="12">
+                      <StackPanel>
+                        <TextBlock Classes="field-label" Text="搜索内容" />
+                        <TextBox Classes="desktop-input"
+                                 Text="{Binding SearchText}"
+                                 PlaceholderText="要替换的文字" />
                       </StackPanel>
+                      <StackPanel>
+                        <TextBlock Classes="field-label" Text="替换为" />
+                        <TextBox Classes="desktop-input"
+                                 Text="{Binding ReplaceText}"
+                                 PlaceholderText="留空表示删除" />
+                      </StackPanel>
+                    </StackPanel>
+                  </TabItem>
+                  <TabItem Header="季度剧集">
+                    <StackPanel Margin="0,14,0,0">
+                      <TextBlock Classes="field-label" Text="季度" />
+                      <TextBox Classes="desktop-input"
+                               Text="{Binding Season}"
+                               PlaceholderText="例如 02 或 S02" />
+                    </StackPanel>
+                  </TabItem>
+                </TabControl>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
 
-                      <!-- 大小 -->
-                      <TextBlock Grid.Column="2" Classes="file-info"
-                                 Text="{Binding SizeFormatted}"
-                                 VerticalAlignment="Center" />
-
-                      <!-- 类型 -->
-                      <TextBlock Grid.Column="3" Classes="file-info"
-                                 Text="{Binding Extension}"
-                                 VerticalAlignment="Center" />
-
-                      <!-- 修改时间 -->
-                      <TextBlock Grid.Column="4" Classes="file-info"
-                                 Text="{Binding ModifiedFormatted}"
-                                 VerticalAlignment="Center" />
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
+      <Grid Grid.Column="1" RowDefinitions="58,36,*"
+            Background="{StaticResource SurfaceBrush}">
+        <Border Grid.Row="0" Padding="18,10"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,0,1">
+          <Grid ColumnDefinitions="Auto,*,220,150" ColumnSpacing="10">
+            <CheckBox VerticalAlignment="Center"
+                      IsChecked="{Binding SelectAll}"
+                      Content="全选" />
+            <TextBox Grid.Column="2"
+                     Classes="desktop-input"
+                     Text="{Binding FilterText}"
+                     PlaceholderText="搜索文件名" />
+            <ComboBox Grid.Column="3"
+                      MinHeight="38"
+                      ItemsSource="{Binding SortModes}"
+                      SelectedIndex="{Binding SortMode}"
+                      HorizontalAlignment="Stretch" />
           </Grid>
         </Border>
+
+        <Border Grid.Row="1"
+                Padding="16,0"
+                Background="#F7F9FA"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,0,1">
+          <Grid ColumnDefinitions="36,1.2*,1.2*,82,78,126" ColumnSpacing="12">
+            <TextBlock Grid.Column="1" Classes="muted" Text="原文件名"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Classes="muted" Text="重命名预览"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="3" Classes="muted" Text="大小"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="4" Classes="muted" Text="类型"
+                       VerticalAlignment="Center" />
+            <TextBlock Grid.Column="5" Classes="muted" Text="修改时间"
+                       VerticalAlignment="Center" />
+          </Grid>
+        </Border>
+
+        <ListBox Grid.Row="2"
+                 Classes="file-list"
+                 ItemsSource="{Binding FileList}"
+                 IsVisible="{Binding FileList.Count}">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="vm:FileItemInfo">
+              <Border Padding="16,10"
+                      BorderBrush="{StaticResource BorderBrush}"
+                      BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="36,1.2*,1.2*,82,78,126" ColumnSpacing="12">
+                  <CheckBox VerticalAlignment="Center"
+                            IsChecked="{Binding IsSelected}" />
+                  <TextBlock Grid.Column="1" Classes="file-name"
+                             Text="{Binding Name}"
+                             VerticalAlignment="Center" />
+                  <Grid Grid.Column="2">
+                    <TextBlock Classes="muted" Text="—"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding !HasRenamePreview}" />
+                    <TextBlock Classes="preview-name"
+                               Text="{Binding PreviewName}"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding HasRenamePreview}" />
+                  </Grid>
+                  <TextBlock Grid.Column="3" Classes="muted"
+                             Text="{Binding SizeFormatted}"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="4" Classes="muted"
+                             Text="{Binding Extension}"
+                             TextTrimming="CharacterEllipsis"
+                             VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="5" Classes="muted"
+                             Text="{Binding ModifiedFormatted}"
+                             VerticalAlignment="Center" />
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Grid Grid.Row="2" IsVisible="{Binding !FileList.Count}">
+          <StackPanel HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+            <TextBlock FontSize="15" FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Text="选择一个文件夹开始"
+                       IsVisible="{Binding !HasSelectedPath}" />
+            <TextBlock FontSize="15" FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       Text="没有找到文件"
+                       IsVisible="{Binding HasSelectedPath}" />
+          </StackPanel>
+        </Grid>
       </Grid>
-    </ScrollViewer>
+    </Grid>
+
+    <Border Grid.Row="2"
+            Padding="18,10"
+            Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,Auto,180" ColumnSpacing="14">
+        <TextBlock Classes="muted"
+                   Text="{Binding StatusMessage}"
+                   TextTrimming="CharacterEllipsis"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal"
+                    VerticalAlignment="Center" Spacing="4">
+          <TextBlock Text="{Binding SelectedCount}"
+                     Foreground="{StaticResource SuccessBrush}"
+                     FontWeight="SemiBold" />
+          <TextBlock Classes="muted" Text="个文件将被处理" />
+        </StackPanel>
+        <Button Grid.Column="2"
+                Classes="command primary"
+                Content="执行重命名"
+                Command="{Binding RenameCommand}"
+                IsEnabled="{Binding CanRename}"
+                HorizontalAlignment="Stretch" />
+      </Grid>
+    </Border>
   </Grid>
 </UserControl>

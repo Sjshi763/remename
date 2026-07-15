@@ -130,6 +130,9 @@ public partial class MainViewModel : ViewModelBase
     private string _sortBy = "Name";
 
     [ObservableProperty]
+    private int _sortMode;
+
+    [ObservableProperty]
     private bool _sortAscending = true;
 
     public bool IsDesktop => PlatformHelper.IsDesktop;
@@ -147,6 +150,8 @@ public partial class MainViewModel : ViewModelBase
         : HasSearchText);
     public IReadOnlyList<string> RenameModes { get; } =
         new[] { "普通替换", "模式 1：季度剧集" };
+    public IReadOnlyList<string> SortModes { get; } =
+        new[] { "名称排序", "大小排序", "类型排序", "时间排序" };
 
     public IFolderPickerService? FolderPickerService { get; set; }
 
@@ -308,6 +313,17 @@ public partial class MainViewModel : ViewModelBase
     partial void OnSortByChanged(string value)
     {
         ApplySorting();
+    }
+
+    partial void OnSortModeChanged(int value)
+    {
+        SortBy = value switch
+        {
+            1 => "Size",
+            2 => "Extension",
+            3 => "Modified",
+            _ => "Name"
+        };
     }
 
     partial void OnSortAscendingChanged(bool value)
