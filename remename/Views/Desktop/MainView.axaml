@@ -249,28 +249,21 @@
           <Border Classes="section">
             <StackPanel Spacing="12">
               <TextBlock Classes="section-title" Text="重命名规则" />
-              <TabControl SelectedIndex="{Binding RenameMode}">
-                <TabItem Header="普通替换">
-                  <StackPanel Spacing="12" Margin="0,12,0,0">
-                    <StackPanel>
-                      <TextBlock Classes="field-label" Text="搜索内容" />
-                      <TextBox Text="{Binding SearchText}" PlaceholderText="要替换的文字" />
-                    </StackPanel>
-                    <StackPanel>
-                      <TextBlock Classes="field-label" Text="替换为" />
-                      <TextBox Text="{Binding ReplaceText}" PlaceholderText="新的文字（可为空）" />
-                    </StackPanel>
-                  </StackPanel>
-                </TabItem>
-                <TabItem Header="模式 1：季度剧集">
-                  <StackPanel Spacing="12" Margin="0,12,0,0">
-                    <StackPanel>
-                      <TextBlock Classes="field-label" Text="季度" />
-                      <TextBox Text="{Binding Season}" PlaceholderText="例如 02 或 S02" />
-                    </StackPanel>
-                  </StackPanel>
-                </TabItem>
-              </TabControl>
+              <ComboBox ItemsSource="{Binding RenameModes}"
+                        SelectedIndex="{Binding RenameMode}"
+                        HorizontalAlignment="Stretch" />
+              <StackPanel IsVisible="{Binding IsStandardRenameMode}">
+                <TextBlock Classes="field-label" Text="搜索内容" />
+                <TextBox Text="{Binding SearchText}" PlaceholderText="要替换的文字" />
+              </StackPanel>
+              <StackPanel IsVisible="{Binding IsStandardRenameMode}">
+                <TextBlock Classes="field-label" Text="替换为" />
+                <TextBox Text="{Binding ReplaceText}" PlaceholderText="新的文字（可为空）" />
+              </StackPanel>
+              <StackPanel IsVisible="{Binding IsAnimePresetMode}">
+                <TextBlock Classes="field-label" Text="季度" />
+                <TextBox Text="{Binding Season}" PlaceholderText="例如 02 或 S02" />
+              </StackPanel>
               <Button Content="执行重命名" Command="{Binding RenameCommand}" Classes="primary"
                       HorizontalAlignment="Stretch" MinHeight="44"
                       IsEnabled="{Binding CanRename}" />
