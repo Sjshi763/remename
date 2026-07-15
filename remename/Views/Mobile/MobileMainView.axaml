@@ -43,6 +43,11 @@
       <Setter Property="FontSize" Value="13" />
       <Setter Property="Foreground" Value="#64748B" />
     </Style>
+    <Style Selector="TextBlock.file-preview-mobile">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Foreground" Value="#15803D" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
 
     <!-- 移动端输入框 - 大尺寸便于触控 -->
     <Style Selector="TextBox.mobile-input">
@@ -285,6 +290,10 @@
 
                       <StackPanel Grid.Column="1" Spacing="4">
                         <TextBlock Classes="file-name-mobile" Text="{Binding Name}" />
+                        <StackPanel Spacing="2" IsVisible="{Binding HasRenamePreview}">
+                          <TextBlock Classes="file-info-mobile" Text="将重命名为" />
+                          <TextBlock Classes="file-preview-mobile" Text="{Binding PreviewName}" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                           <TextBlock Classes="file-info-mobile" Text="{Binding SizeFormatted}" />
                           <TextBlock Classes="file-info-mobile" Text="•" />

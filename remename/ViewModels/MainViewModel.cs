@@ -13,6 +13,8 @@ namespace remename.ViewModels;
 public partial class FileItemInfo : ObservableObject
 {
     public string Name { get; set; } = string.Empty;
+    [ObservableProperty]
+    private string? _previewName;
     public string Extension { get; set; } = string.Empty;
     public long Size { get; set; }
     public DateTime ModifiedTime { get; set; }
@@ -20,6 +22,12 @@ public partial class FileItemInfo : ObservableObject
     private bool _isSelected;
     public string SizeFormatted => FormatFileSize(Size);
     public string ModifiedFormatted => ModifiedTime.ToString("yyyy-MM-dd HH:mm");
+    public bool HasRenamePreview => !string.IsNullOrEmpty(PreviewName) && PreviewName != Name;
+
+    partial void OnPreviewNameChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasRenamePreview));
+    }
 
     private static string FormatFileSize(long bytes)
     {
@@ -321,6 +329,12 @@ public partial class MainViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(HasSearchText));
         OnPropertyChanged(nameof(CanRename));
+        UpdateRenamePreviews();
+    }
+
+    partial void OnReplaceTextChanged(string value)
+    {
+        UpdateRenamePreviews();
     }
 
     partial void OnRenameModeChanged(int value)
@@ -328,11 +342,25 @@ public partial class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsStandardRenameMode));
         OnPropertyChanged(nameof(IsAnimePresetMode));
         OnPropertyChanged(nameof(CanRename));
+        UpdateRenamePreviews();
     }
 
     partial void OnSeasonChanged(string value)
     {
         OnPropertyChanged(nameof(CanRename));
+        UpdateRenamePreviews();
+    }
+
+    private void UpdateRenamePreviews()
+    {
+        var canPreview = IsAnimePresetMode
+            ? TryNormalizeSeason(Season, out _)
+            : !string.IsNullOrEmpty(SearchText);
+
+        foreach (var file in FileList)
+        {
+            file.PreviewName = canPreview ? BuildNewFileName(file.Name) : null;
+        }
     }
 
     private void ApplyFilter()
@@ -586,6 +614,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             ApplySorting();
+            UpdateRenamePreviews();
             StatusMessage = $"已加载 {filteredFiles.Count} 个文件";
         }
         catch (Exception ex)
@@ -856,6 +885,7 @@ public partial class MainViewModel : ViewModelBase
             }
 
             ApplySorting();
+            UpdateRenamePreviews();
             StatusMessage = $"已加载 {filteredFiles.Count} 个文件";
         }
         catch (Exception ex)
