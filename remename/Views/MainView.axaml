@@ -196,6 +196,36 @@
                           Classes="secondary" HorizontalAlignment="Stretch"
                           IsEnabled="{Binding IsSmbConnected}" />
                 </Grid>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10"
+                      IsVisible="{Binding HasSmbCredentialStore}">
+                  <Button Content="保存凭证" Command="{Binding SaveSmbCredentialCommand}"
+                          Classes="secondary" HorizontalAlignment="Stretch" />
+                  <Button Grid.Column="1" Content="已保存凭证"
+                          Command="{Binding ToggleSmbCredentialListCommand}"
+                          Classes="secondary" HorizontalAlignment="Stretch" />
+                </Grid>
+
+                <StackPanel Spacing="6" IsVisible="{Binding IsSmbCredentialListOpen}">
+                  <TextBlock Text="没有已保存的凭证" Classes="muted"
+                             IsVisible="{Binding !SavedSmbCredentials.Count}" />
+                  <ItemsControl ItemsSource="{Binding SavedSmbCredentials}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="vm:SmbCredentialListItem">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Margin="0,3">
+                          <StackPanel>
+                            <TextBlock Text="{Binding Server}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding Username}" Classes="muted" TextWrapping="Wrap" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Content="使用" Command="{Binding UseCommand}"
+                                  Classes="secondary" />
+                          <Button Grid.Column="2" Content="删除" Command="{Binding DeleteCommand}"
+                                  Classes="secondary" />
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
               </StackPanel>
             </StackPanel>
           </Border>

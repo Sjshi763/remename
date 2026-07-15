@@ -10,6 +10,8 @@ namespace remename;
 
 public partial class App : Application
 {
+    public static ISmbCredentialStore SmbCredentialStore { get; set; } = new UnavailableSmbCredentialStore();
+
     public override void Initialize()
     {
         AppLogger.Initialize();
@@ -27,7 +29,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = new MainViewModel(SmbCredentialStore)
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
@@ -36,7 +38,7 @@ public partial class App : Application
                 ? (Avalonia.Controls.Control)new MobileMainView()
                 : new MainView();
 
-            mainView.DataContext = new MainViewModel();
+            mainView.DataContext = new MainViewModel(SmbCredentialStore);
             singleViewPlatform.MainView = mainView;
         }
 

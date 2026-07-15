@@ -41,9 +41,19 @@ public sealed class SmbFolderItem
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
+public sealed class SmbCredentialListItem
+{
+    public required string Server { get; init; }
+    public required string Username { get; init; }
+    public required IAsyncRelayCommand UseCommand { get; init; }
+    public required IAsyncRelayCommand DeleteCommand { get; init; }
+}
+
 public partial class MainViewModel : ViewModelBase
 {
     private ISmbService? _smbService;
+    private readonly ISmbCredentialStore _smbCredentialStore;
+    private SmbCredential? _connectedCredential;
     private AsyncRelayCommand? _selectFolderCommand;
 
     [ObservableProperty]
@@ -78,6 +88,14 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _smbPassword = string.Empty;
+
+    public bool HasSmbCredentialStore => _smbCredentialStore.IsAvailable;
+
+    [ObservableProperty]
+    private bool _isSmbCredentialListOpen;
+
+    [ObservableProperty]
+    private ObservableCollection<SmbCredentialListItem> _savedSmbCredentials = new();
 
     [ObservableProperty]
     private bool _isSmbConnected = false;
@@ -138,6 +156,14 @@ public partial class MainViewModel : ViewModelBase
     public IAsyncRelayCommand DisconnectSmbCommand =>
         _disconnectSmbCommand ??= new AsyncRelayCommand(ExecuteDisconnectSmbAsync);
 
+    private AsyncRelayCommand? _saveSmbCredentialCommand;
+    public IAsyncRelayCommand SaveSmbCredentialCommand =>
+        _saveSmbCredentialCommand ??= new AsyncRelayCommand(ExecuteSaveSmbCredentialAsync, () => IsSmbConnected);
+
+    private AsyncRelayCommand? _toggleSmbCredentialListCommand;
+    public IAsyncRelayCommand ToggleSmbCredentialListCommand =>
+        _toggleSmbCredentialListCommand ??= new AsyncRelayCommand(ExecuteToggleSmbCredentialListAsync);
+
     private AsyncRelayCommand? _navigateSmbUpCommand;
     public IAsyncRelayCommand NavigateSmbUpCommand =>
         _navigateSmbUpCommand ??= new AsyncRelayCommand(ExecuteNavigateSmbUpAsync);
@@ -154,11 +180,107 @@ public partial class MainViewModel : ViewModelBase
     public IAsyncRelayCommand ToggleSelectAllCommand =>
         _toggleSelectAllCommand ??= new AsyncRelayCommand(ExecuteToggleSelectAll);
 
-    public MainViewModel()
+    public MainViewModel() : this(new UnavailableSmbCredentialStore())
     {
+    }
+
+    public MainViewModel(ISmbCredentialStore smbCredentialStore)
+    {
+        _smbCredentialStore = smbCredentialStore;
         _smbService = new SmbService();
         // SMB功能主要用于移动端,桌面端可以直接访问本地文件
         IsSmbOptionAvailable = PlatformHelper.IsMobile;
+    }
+
+    partial void OnIsSmbConnectedChanged(bool value)
+    {
+        _saveSmbCredentialCommand?.NotifyCanExecuteChanged();
+    }
+
+    private async Task RefreshSavedSmbCredentialsAsync()
+    {
+        SavedSmbCredentials.Clear();
+        if (!_smbCredentialStore.IsAvailable)
+            return;
+        try
+        {
+            foreach (var info in await _smbCredentialStore.ListAsync())
+            {
+                SavedSmbCredentials.Add(new SmbCredentialListItem
+                {
+                    Server = info.Server,
+                    Username = info.Username,
+                    UseCommand = new AsyncRelayCommand(() => ExecuteUseSmbCredentialAsync(info.Id)),
+                    DeleteCommand = new AsyncRelayCommand(() => ExecuteDeleteSmbCredentialAsync(info.Id))
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Failed to list saved SMB credentials", ex);
+            StatusMessage = $"读取已保存凭证失败: {ex.Message}";
+        }
+    }
+
+    private async Task ExecuteToggleSmbCredentialListAsync()
+    {
+        IsSmbCredentialListOpen = !IsSmbCredentialListOpen;
+        if (IsSmbCredentialListOpen)
+            await RefreshSavedSmbCredentialsAsync();
+    }
+
+    private async Task ExecuteUseSmbCredentialAsync(string id)
+    {
+        try
+        {
+            var credential = await _smbCredentialStore.LoadAsync(id);
+            if (credential is null)
+                throw new InvalidOperationException("凭证不存在或已失效");
+            SmbServer = credential.Server;
+            SmbUsername = credential.Username;
+            SmbPassword = credential.Password;
+            IsSmbMode = true;
+            IsSmbCredentialListOpen = false;
+            StatusMessage = "已载入登录凭证";
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Failed to load selected SMB credential", ex);
+            StatusMessage = $"载入凭证失败: {ex.Message}";
+            await RefreshSavedSmbCredentialsAsync();
+        }
+    }
+
+    private async Task ExecuteDeleteSmbCredentialAsync(string id)
+    {
+        try
+        {
+            await _smbCredentialStore.DeleteAsync(id);
+            await RefreshSavedSmbCredentialsAsync();
+            StatusMessage = "已删除保存的凭证";
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Failed to delete SMB credential", ex);
+            StatusMessage = $"删除凭证失败: {ex.Message}";
+        }
+    }
+
+    private async Task ExecuteSaveSmbCredentialAsync()
+    {
+        if (_connectedCredential is null || !IsSmbConnected)
+            return;
+        try
+        {
+            await _smbCredentialStore.SaveAsync(_connectedCredential);
+            await RefreshSavedSmbCredentialsAsync();
+            StatusMessage = "登录凭证已安全保存";
+        }
+        catch (Exception ex)
+        {
+            AppLogger.Error("Failed to save SMB credential", ex);
+            StatusMessage = $"保存凭证失败: {ex.Message}";
+        }
     }
 
     partial void OnFilterTextChanged(string value)
@@ -315,12 +437,15 @@ public partial class MainViewModel : ViewModelBase
     {
         try
         {
+            _connectedCredential = null;
+            IsSmbConnected = false;
             AppLogger.Info($"Connecting to SMB server '{SmbServer}'");
             StatusMessage = "正在连接...";
             if (_smbService == null)
                 _smbService = new SmbService();
 
             await _smbService.ConnectAsync(SmbServer, SmbUsername, SmbPassword);
+            _connectedCredential = new SmbCredential(SmbServer.Trim(), SmbUsername, SmbPassword);
             IsSmbConnected = true;
             AppLogger.Info($"Connected to SMB server '{SmbServer}'");
             IsSmbMode = true;
@@ -333,6 +458,7 @@ public partial class MainViewModel : ViewModelBase
         {
             AppLogger.Error($"Failed to connect to SMB server '{SmbServer}'", ex);
             IsSmbConnected = false;
+            _connectedCredential = null;
             StatusMessage = $"连接失败: {ex.Message}";
         }
     }

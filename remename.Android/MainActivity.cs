@@ -37,6 +37,7 @@ public class AndroidApp : AvaloniaAndroidApplication<App>
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
+        App.SmbCredentialStore = new AndroidSmbCredentialStore(this);
         return base.CustomizeAppBuilder(builder)
             .WithInterFont();
     }

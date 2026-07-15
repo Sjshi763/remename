@@ -173,6 +173,37 @@
                         Command="{Binding DisconnectSmbCommand}"
                         HorizontalAlignment="Stretch" IsEnabled="{Binding IsSmbConnected}" />
               </Grid>
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12"
+                    IsVisible="{Binding HasSmbCredentialStore}">
+                <Button Classes="mobile-button mobile-secondary" Content="保存凭证"
+                        Command="{Binding SaveSmbCredentialCommand}"
+                        HorizontalAlignment="Stretch" />
+                <Button Grid.Column="1" Classes="mobile-button mobile-secondary"
+                        Content="已保存凭证" Command="{Binding ToggleSmbCredentialListCommand}"
+                        HorizontalAlignment="Stretch" />
+              </Grid>
+
+              <StackPanel Spacing="8" IsVisible="{Binding IsSmbCredentialListOpen}">
+                <TextBlock Classes="muted-mobile" Text="没有已保存的凭证"
+                           IsVisible="{Binding !SavedSmbCredentials.Count}" />
+                <ItemsControl ItemsSource="{Binding SavedSmbCredentials}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:SmbCredentialListItem">
+                      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Margin="0,4">
+                        <StackPanel>
+                          <TextBlock Text="{Binding Server}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                          <TextBlock Classes="muted-mobile" Text="{Binding Username}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Classes="mobile-button mobile-secondary"
+                                Content="使用" Command="{Binding UseCommand}" />
+                        <Button Grid.Column="2" Classes="mobile-button mobile-secondary"
+                                Content="删除" Command="{Binding DeleteCommand}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
             </StackPanel>
           </StackPanel>
         </Border>
