@@ -63,6 +63,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly ISmbCredentialStore _smbCredentialStore;
     private SmbCredential? _connectedCredential;
     private AsyncRelayCommand? _selectFolderCommand;
+    private bool _isApplyingSelectAll;
+    private bool _isSyncingSelectAll;
 
     [ObservableProperty]
     private string _selectedPath = string.Empty;
@@ -303,10 +305,22 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectAllChanged(bool value)
     {
-        foreach (var file in FileList)
+        if (_isSyncingSelectAll)
+            return;
+
+        _isApplyingSelectAll = true;
+        try
         {
-            file.IsSelected = value;
+            foreach (var file in FileList)
+            {
+                file.IsSelected = value;
+            }
         }
+        finally
+        {
+            _isApplyingSelectAll = false;
+        }
+
         UpdateSelectedCount();
     }
 
@@ -430,8 +444,19 @@ public partial class MainViewModel : ViewModelBase
 
     public void OnFileSelectionChanged()
     {
+        if (_isApplyingSelectAll)
+            return;
+
         UpdateSelectedCount();
-        SelectAll = FileList.Count > 0 && FileList.All(f => f.IsSelected);
+        _isSyncingSelectAll = true;
+        try
+        {
+            SelectAll = FileList.Count > 0 && FileList.All(f => f.IsSelected);
+        }
+        finally
+        {
+            _isSyncingSelectAll = false;
+        }
     }
 
     private async Task ExecuteRefreshAsync()
